@@ -1,0 +1,50 @@
+{
+  "default": {
+    "heading": "Emergency help resources",
+    "intro": "If anyone is in immediate danger, always call 911 first.",
+    "sections": [
+      {
+        "title": "Non-state-specific 911 information",
+        "description": "For immediate danger or an urgent medical, fire, or police emergency, call 911.",
+        "items": [
+          { "label": "Phone", "text": "911", "href": "tel:911" }
+        ]
+      },
+      {
+        "title": "National Human Trafficking Hotline",
+        "description": "This provides nationwide support and can connect victims with local services.",
+        "items": [
+          { "label": "Phone", "text": "1-888-373-7888", "href": "tel:18883737888" },
+          { "label": "Text", "text": "Text \"HELP\" or \"INFO\" to 233733 (BEFREE)" },
+          { "label": "Live Chat", "text": "humantraffickinghotline.org", "href": "https://humantraffickinghotline.org" }
+        ]
+      }
+    ]
+  },
+  "resources": {
+    "44157b6c-9419-4f46-935e-4f9a91a1489a": {
+      "heading": "Emergency help resources",
+      "intro": "In Tennessee, you should contact the state-specific hotline or the national hotline. If anyone is in immediate danger, always call 911 first.",
+      "sections": [
+        {
+          "title": "Tennessee Human Trafficking Hotline",
+          "description": "This is the primary state resource, operated in partnership with the Tennessee Bureau of Investigation (TBI).",
+          "items": [
+            { "label": "Phone", "text": "1-855-55-TNHTH (1-855-558-6484)", "href": "tel:18555586484" },
+            { "label": "Availability", "text": "24/7, confidential, and toll-free." },
+            { "label": "Online Reporting", "text": "ithastostop.com", "href": "https://ithastostop.com" }
+          ]
+        },
+        {
+          "title": "National Human Trafficking Hotline",
+          "description": "This provides nationwide support and can connect victims with local services.",
+          "items": [
+            { "label": "Phone", "text": "1-888-373-7888", "href": "tel:18883737888" },
+            { "label": "Text", "text": "Text \"HELP\" or \"INFO\" to 233733 (BEFREE)" },
+            { "label": "Live Chat", "text": "humantraffickinghotline.org", "href": "https://humantraffickinghotline.org" }
+          ]
+        }
+      ]
+    }
+  }
+}

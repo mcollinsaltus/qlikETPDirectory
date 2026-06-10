@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Functional Directory Prototype</title>
+  <style>
+    :root {
+      --ink: #142235;
+      --muted: #5d6b7a;
+      --line: #dbe5ea;
+      --paper: #ffffff;
+      --surface: #f4f8f9;
+      --teal: #087f83;
+      --teal-dark: #075f65;
+      --teal-soft: #d9f0ef;
+      --blue: #276fbf;
+      --blue-soft: #e3effc;
+      --gold: #f2b84b;
+      --gold-soft: #fff3d8;
+      --green: #3a8f5c;
+      --green-soft: #e2f1e7;
+      --coral: #d95846;
+      --shadow: 0 16px 36px rgba(21, 38, 52, .12);
+      --small-shadow: 0 8px 20px rgba(21, 38, 52, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--surface);
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .masthead {
+      color: #fff;
+      padding: 28px 32px 34px;
+      background:
+        linear-gradient(135deg, rgba(8, 127, 131, .96), rgba(7, 95, 101, .96)),
+        url("data:image/svg+xml,%3Csvg width='1200' height='260' viewBox='0 0 1200 260' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 185C105 142 206 135 303 164C429 201 527 228 656 164C791 96 928 99 1200 141V260H0Z' fill='%23ffffff' fill-opacity='.12'/%3E%3Cpath d='M0 92C172 139 293 111 423 75C580 32 730 34 881 87C1012 133 1118 128 1200 101V0H0Z' fill='%23ffffff' fill-opacity='.08'/%3E%3C/svg%3E");
+      background-size: cover;
+    }
+
+    .masthead-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 5px 12px;
+      border: 1px solid rgba(255, 255, 255, .36);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .12);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 16px 0 8px;
+      max-width: 840px;
+      font-size: 38px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 0;
+      color: rgba(255, 255, 255, .9);
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .help-card {
+      width: 280px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, .28);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .14);
+    }
+
+    .help-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 18px;
+    }
+
+    .help-card span {
+      display: block;
+      color: rgba(255, 255, 255, .86);
+      line-height: 1.45;
+    }
+
+    .search-band {
+      position: relative;
+      z-index: 2;
+      max-width: 1440px;
+      margin: -24px auto 0;
+      padding: 0 32px;
+    }
+
+    .search-panel {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .search-box { position: relative; }
+
+    .search-box .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--muted);
+      border-radius: 50%;
+      color: var(--muted);
+      transform: translateY(-50%);
+    }
+
+    .search-box .search-icon::after {
+      content: "";
+      position: absolute;
+      right: -7px;
+      bottom: -5px;
+      width: 9px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--muted);
+      transform: rotate(45deg);
+      transform-origin: left center;
+    }
+
+    .search-box input {
+      width: 100%;
+      min-height: 56px;
+      padding: 0 18px 0 48px;
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fff;
+      font-size: 17px;
+    }
+
+    .search-box input:focus,
+    .filter-search:focus {
+      outline: 3px solid rgba(39, 111, 191, .2);
+      border-color: var(--blue);
+    }
+
+    .primary-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .button {
+      min-height: 44px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--ink);
+      background: #e9f0f3;
+      font-weight: 700;
+    }
+
+    .button.primary {
+      color: #fff;
+      background: var(--teal);
+    }
+
+    .button.secondary {
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+    }
+
+    .button.danger {
+      color: #fff;
+      background: var(--coral);
+    }
+
+    .content-wrap {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 22px 32px 42px;
+    }
+
+    .quick-needs {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+      margin: 18px 0 20px;
+    }
+
+    .section-label {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .need-buttons,
+    .chip-row,
+    .service-list,
+    .active-filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .need {
+      min-height: 42px;
+      padding: 0 14px;
+      border: 1px solid #cbdde7;
+      border-radius: 8px;
+      color: #183044;
+      background: #fff;
+      box-shadow: var(--small-shadow);
+      font-weight: 700;
+    }
+
+    .need.featured {
+      border-color: #f1d392;
+      color: #65420a;
+      background: var(--gold-soft);
+    }
+
+    .need.active {
+      color: #fff;
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 316px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .filters {
+      position: sticky;
+      top: 16px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--small-shadow);
+    }
+
+    .filters.collapsed {
+      display: none;
+    }
+
+    .filters-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f9fbfc;
+    }
+
+    .filters-header h2,
+    .filter-title {
+      margin: 0;
+      font-weight: 800;
+    }
+
+    .filters-header h2 { font-size: 20px; }
+    .filter-title { margin-bottom: 10px; font-size: 16px; }
+
+    .clear-link {
+      border: 0;
+      color: var(--blue);
+      background: transparent;
+      font-weight: 700;
+    }
+
+    .filter-group {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .filter-group:last-child { border-bottom: 0; }
+
+    .filter-search {
+      width: 100%;
+      min-height: 40px;
+      margin-bottom: 10px;
+      padding: 0 12px;
+      border: 1px solid #cbd9e0;
+      border-radius: 8px;
+    }
+
+    .chip {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: #193047;
+      background: #dceaf1;
+    }
+
+    .chip.selected,
+    .chip[aria-pressed="true"] {
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .chip.warm { background: var(--gold-soft); border-color: #f3ce7d; }
+    .chip.green { background: var(--green-soft); border-color: #b8dcc5; }
+
+    .results { min-width: 0; }
+
+    .results-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .result-count {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .result-subtext {
+      margin: 5px 0 0;
+      color: var(--muted);
+    }
+
+    .view-toggle {
+      display: inline-flex;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .view-toggle button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 700;
+    }
+
+    .view-toggle button.active {
+      color: #fff;
+      background: var(--teal);
+    }
+
+    .active-filter-row {
+      margin-bottom: 18px;
+    }
+
+    .active-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 999px;
+      color: #17324b;
+      background: var(--blue-soft);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .cards.list-view {
+      grid-template-columns: 1fr;
+    }
+
+    .org-card {
+      display: flex;
+      min-height: 360px;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--small-shadow);
+    }
+
+    .list-view .org-card {
+      min-height: 0;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 18px 12px;
+      border-top: 5px solid var(--teal);
+    }
+
+    .org-card:nth-child(2n) .card-top { border-top-color: var(--blue); }
+    .org-card:nth-child(3n) .card-top { border-top-color: var(--gold); }
+    .org-card:nth-child(4n) .card-top { border-top-color: var(--green); }
+
+    .org-card h3 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .website-link {
+      white-space: nowrap;
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .card-body {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 0 18px 16px;
+    }
+
+    .meta {
+      display: grid;
+      gap: 6px;
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .meta strong { color: var(--ink); }
+
+    .service-list {
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    .service-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border: 0;
+      border-radius: 999px;
+      color: #183044;
+      background: #edf4f7;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .service-tag.main {
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+    }
+
+    .description {
+      margin: 0 0 18px;
+      color: #34475a;
+      line-height: 1.5;
+    }
+
+    .details-panel {
+      display: none;
+      margin: -4px 0 18px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f8fbfc;
+      color: #34475a;
+      line-height: 1.45;
+    }
+
+    .details-panel.open {
+      display: block;
+    }
+
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: auto;
+    }
+
+    .card-actions .details {
+      grid-column: 1 / -1;
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+    }
+
+    .map-panel,
+    .empty-state {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--small-shadow);
+    }
+
+    .map-panel {
+      display: none;
+      min-height: 420px;
+      background:
+        linear-gradient(90deg, rgba(8, 127, 131, .10) 1px, transparent 1px),
+        linear-gradient(rgba(39, 111, 191, .08) 1px, transparent 1px),
+        #fff;
+      background-size: 54px 54px;
+      position: relative;
+    }
+
+    .map-panel.active { display: block; }
+
+    .map-pin {
+      position: absolute;
+      min-width: 148px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--teal);
+      box-shadow: var(--small-shadow);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .map-pin:nth-child(2n) { background: var(--blue); }
+    .map-pin:nth-child(3n) { background: var(--green); }
+
+    .empty-state {
+      display: none;
+      text-align: center;
+    }
+
+    .empty-state.active { display: block; }
+
+    .empty-state h3 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .empty-state p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 1100px) {
+      .workspace { grid-template-columns: 1fr; }
+      .filters { position: static; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .masthead, .search-band, .content-wrap {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .masthead-inner,
+      .search-panel,
+      .quick-needs {
+        grid-template-columns: 1fr;
+      }
+
+      .help-card { width: 100%; }
+      h1 { font-size: 31px; }
+
+      .primary-actions,
+      .results-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .cards { grid-template-columns: 1fr; }
+      .card-top { flex-direction: column; }
+      .website-link { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="masthead">
+      <div class="masthead-inner">
+        <div>
+          <span class="eyebrow">Participating Organization Directory</span>
+          <h1>Find the right organization faster.</h1>
+          <p class="lead">Search by location, service type, or population served, then contact organizations directly from the results.</p>
+        </div>
+        <aside class="help-card">
+          <strong>Need a quick place to start?</strong>
+          <span>Choose a common need below and the directory can narrow the list for you.</span>
+        </aside>
+      </div>
+    </header>
+
+    <section class="search-band" aria-label="Search">
+      <div class="search-panel">
+        <label class="search-box">
+          <span class="search-icon" aria-hidden="true"></span>
+          <input id="searchInput" autocomplete="off" placeholder="Search by organization, county, service, or keyword">
+        </label>
+        <div class="primary-actions">
+          <button class="button primary" id="searchButton">Search Directory</button>
+          <button class="button secondary" id="toggleFilters">Hide Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <main class="content-wrap">
+      <section class="quick-needs" aria-label="Common needs">
+        <p class="section-label">I am looking for</p>
+        <div class="need-buttons" id="needButtons"></div>
+      </section>
+
+      <section class="workspace">
+        <aside class="filters" id="filtersPanel" aria-label="Filters">
+          <div class="filters-header">
+            <h2>Filters</h2>
+            <button class="clear-link" id="clearFiltersTop">Clear all</button>
+          </div>
+          <div id="filterGroups"></div>
+        </aside>
+
+        <section class="results" aria-label="Results">
+          <div class="results-toolbar">
+            <div>
+              <p class="result-count" id="resultCount">0 matching organizations</p>
+              <p class="result-subtext" id="resultSubtext">Use search or filters to narrow the directory.</p>
+            </div>
+            <div class="view-toggle" aria-label="View options">
+              <button class="active" data-view="cards">Cards</button>
+              <button data-view="list">List</button>
+              <button data-view="map">Map</button>
+            </div>
+          </div>
+
+          <div class="active-filter-row" id="activeFilters"></div>
+          <div class="cards" id="resultsGrid"></div>
+          <div class="map-panel" id="mapPanel" aria-label="Map preview"></div>
+          <div class="empty-state" id="emptyState">
+            <h3>No matching organizations found</h3>
+            <p>Try removing a filter, searching with fewer words, or starting over.</p>
+            <button class="button primary" id="clearFiltersEmpty">Clear filters</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const organizations = [
+      {
+        name: "Community Resource Center of Middle Tennessee",
+        website: "https://example.org/community-resource",
+        counties: ["Davidson", "Rutherford", "Williamson"],
+        mainServices: ["Identification", "Restoration"],
+        additionalServices: ["Aftercare", "Outreach"],
+        populations: ["Adults 18+", "Youth 13-17", "Female", "Male", "Citizen"],
+        organizationType: "Nonprofit",
+        contact: "Intake Team",
+        phone: "615-555-0104",
+        email: "intake@example.org",
+        description: "Helps individuals and families connect to immediate support, case management, and local partner services.",
+        details: "Best starting point for people who are unsure which service category fits their need. Staff can provide warm referrals."
+      },
+      {
+        name: "Nashville Legal Aid Partnership",
+        website: "https://example.org/legal-aid",
+        counties: ["Davidson", "Sumner", "Wilson"],
+        mainServices: ["Identification", "Reforms"],
+        additionalServices: ["Legal", "Victim Advocates", "Outreach"],
+        populations: ["Adults 18+", "Female", "Male", "Citizen", "Non-Citizen"],
+        organizationType: "Legal",
+        contact: "Legal Intake",
+        phone: "615-555-0188",
+        email: "legal@example.org",
+        description: "Provides legal information, referrals, and direct support for people navigating complex service systems.",
+        details: "Offers appointment-based intake and can help determine whether a person needs legal representation, advocacy, or referral."
+      },
+      {
+        name: "Safe Path Family Services",
+        website: "https://example.org/safe-path",
+        counties: ["Shelby", "Davidson", "Hamilton"],
+        mainServices: ["Restoration", "Exit"],
+        additionalServices: ["Temporary Shelter", "Aftercare", "Services"],
+        populations: ["Adults 18+", "Children 0-12", "Youth 13-17", "Female"],
+        organizationType: "Nonprofit",
+        contact: "Support Desk",
+        phone: "901-555-0122",
+        email: "support@example.org",
+        description: "Coordinates short-term shelter referrals, family support, and follow-up resources for partner organizations.",
+        details: "Useful when a person needs a safer short-term plan and coordinated services after the initial referral."
+      },
+      {
+        name: "Tennessee Prevention Coalition",
+        website: "https://example.org/prevention",
+        counties: ["Davidson", "Montgomery", "Robertson"],
+        mainServices: ["Prevention"],
+        additionalServices: ["Training", "Awareness", "Policy"],
+        populations: ["Adults 18+", "Youth 13-17", "Citizen"],
+        organizationType: "Coalition",
+        contact: "Program Coordinator",
+        phone: "615-555-0137",
+        email: "training@example.org",
+        description: "Offers workshops, prevention materials, and community education programs for local organizations.",
+        details: "Designed for schools, civic groups, and agencies looking for prevention education and community awareness support."
+      },
+      {
+        name: "Knoxville Community Care Network",
+        website: "https://example.org/knox-care",
+        counties: ["Knox", "Anderson", "Blount"],
+        mainServices: ["Identification", "Restoration"],
+        additionalServices: ["Services", "Reintegration", "Aftercare"],
+        populations: ["Adults 18+", "Male", "Female", "Non-Citizen"],
+        organizationType: "Healthcare",
+        contact: "Care Navigator",
+        phone: "865-555-0199",
+        email: "care@example.org",
+        description: "Connects people in East Tennessee with healthcare navigation, benefits support, and ongoing service referrals.",
+        details: "Strong option when healthcare access, follow-up, and service coordination are all part of the need."
+      },
+      {
+        name: "Hamilton County Outreach Alliance",
+        website: "https://example.org/hamilton-outreach",
+        counties: ["Hamilton", "Bradley", "Marion"],
+        mainServices: ["Prevention", "Identification"],
+        additionalServices: ["Outreach", "Training", "Awareness"],
+        populations: ["Adults 18+", "Youth 13-17", "Male", "Female"],
+        organizationType: "Coalition/Task Force",
+        contact: "Outreach Director",
+        phone: "423-555-0171",
+        email: "outreach@example.org",
+        description: "Works with local agencies to identify needs, provide training, and connect community members to available resources.",
+        details: "A good fit for community-facing work, cross-agency referrals, and outreach-based service discovery."
+      },
+      {
+        name: "West Tennessee Shelter Collaborative",
+        website: "https://example.org/west-shelter",
+        counties: ["Shelby", "Fayette", "Tipton"],
+        mainServices: ["Exit", "Restoration"],
+        additionalServices: ["Temporary Shelter", "Aftercare", "Intervention"],
+        populations: ["Adults 18+", "Children 0-12", "Female", "Non-Citizen"],
+        organizationType: "Foundation",
+        contact: "Shelter Coordinator",
+        phone: "901-555-0155",
+        email: "shelter@example.org",
+        description: "Supports coordinated shelter placement and stabilization services across several West Tennessee counties.",
+        details: "Focused on immediate housing instability, transition planning, and connection to local partner services."
+      },
+      {
+        name: "Youth Resilience Project",
+        website: "https://example.org/youth-resilience",
+        counties: ["Davidson", "Williamson", "Maury"],
+        mainServices: ["Prevention", "Restoration"],
+        additionalServices: ["Training", "Awareness", "Counseling"],
+        populations: ["Youth 13-17", "Children 0-12", "Female", "Male"],
+        organizationType: "Education",
+        contact: "Youth Services",
+        phone: "615-555-0160",
+        email: "youth@example.org",
+        description: "Provides youth-centered education, family support, and referral pathways for counseling and recovery services.",
+        details: "A family-friendly option for schools, caregivers, and youth-serving agencies seeking supportive resources."
+      }
+    ];
+
+    const filterConfig = [
+      { key: "counties", label: "Location", searchPlaceholder: "Search counties" },
+      { key: "mainServices", label: "Main Services" },
+      { key: "additionalServices", label: "Additional Services" },
+      { key: "populations", label: "Who They Serve" },
+      { key: "organizationType", label: "Organization Type" }
+    ];
+
+    const quickNeeds = [
+      { label: "Emergency help", filters: { additionalServices: ["Temporary Shelter", "Intervention"] }, featured: true },
+      { label: "Legal support", filters: { additionalServices: ["Legal", "Victim Advocates"] } },
+      { label: "Shelter or housing", filters: { additionalServices: ["Temporary Shelter"] } },
+      { label: "Counseling", filters: { additionalServices: ["Counseling", "Aftercare"] } },
+      { label: "Prevention training", filters: { mainServices: ["Prevention"], additionalServices: ["Training"] } },
+      { label: "Organizations near me", filters: { counties: ["Davidson"] } }
+    ];
+
+    const state = {
+      search: "",
+      view: "cards",
+      filtersOpen: true,
+      activeQuickNeed: "",
+      filters: {
+        counties: new Set(["Davidson"]),
+        mainServices: new Set(["Identification"]),
+        additionalServices: new Set(),
+        populations: new Set(),
+        organizationType: new Set()
+      },
+      countySearch: ""
+    };
+
+    const els = {
+      searchInput: document.getElementById("searchInput"),
+      searchButton: document.getElementById("searchButton"),
+      toggleFilters: document.getElementById("toggleFilters"),
+      filtersPanel: document.getElementById("filtersPanel"),
+      filterGroups: document.getElementById("filterGroups"),
+      needButtons: document.getElementById("needButtons"),
+      resultCount: document.getElementById("resultCount"),
+      resultSubtext: document.getElementById("resultSubtext"),
+      activeFilters: document.getElementById("activeFilters"),
+      resultsGrid: document.getElementById("resultsGrid"),
+      mapPanel: document.getElementById("mapPanel"),
+      emptyState: document.getElementById("emptyState"),
+      clearFiltersTop: document.getElementById("clearFiltersTop"),
+      clearFiltersEmpty: document.getElementById("clearFiltersEmpty")
+    };
+
+    function asArray(value) {
+      return Array.isArray(value) ? value : [value];
+    }
+
+    function getOptions(key) {
+      return [...new Set(organizations.flatMap((org) => asArray(org[key])))].sort();
+    }
+
+    function toggleFilter(key, value) {
+      const set = state.filters[key];
+      if (set.has(value)) {
+        set.delete(value);
+      } else {
+        set.add(value);
+      }
+      state.activeQuickNeed = "";
+      render();
+    }
+
+    function clearFilters() {
+      Object.values(state.filters).forEach((set) => set.clear());
+      state.search = "";
+      state.countySearch = "";
+      state.activeQuickNeed = "";
+      els.searchInput.value = "";
+      render();
+    }
+
+    function applyQuickNeed(need) {
+      Object.values(state.filters).forEach((set) => set.clear());
+      Object.entries(need.filters).forEach(([key, values]) => {
+        values.forEach((value) => state.filters[key].add(value));
+      });
+      state.activeQuickNeed = need.label;
+      render();
+    }
+
+    function orgMatchesFilters(org) {
+      return Object.entries(state.filters).every(([key, selected]) => {
+        if (selected.size === 0) return true;
+        const values = asArray(org[key]);
+        return [...selected].some((value) => values.includes(value));
+      });
+    }
+
+    function orgMatchesSearch(org) {
+      if (!state.search.trim()) return true;
+      const haystack = [
+        org.name,
+        org.contact,
+        org.description,
+        org.details,
+        org.organizationType,
+        ...org.counties,
+        ...org.mainServices,
+        ...org.additionalServices,
+        ...org.populations
+      ].join(" ").toLowerCase();
+      return haystack.includes(state.search.trim().toLowerCase());
+    }
+
+    function getFilteredOrganizations() {
+      return organizations.filter((org) => orgMatchesFilters(org) && orgMatchesSearch(org));
+    }
+
+    function renderQuickNeeds() {
+      els.needButtons.innerHTML = quickNeeds.map((need) => `
+        <button class="need ${need.featured ? "featured" : ""} ${state.activeQuickNeed === need.label ? "active" : ""}" data-need="${need.label}">
+          ${need.label}
+        </button>
+      `).join("");
+
+      els.needButtons.querySelectorAll("[data-need]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const need = quickNeeds.find((item) => item.label === button.dataset.need);
+          applyQuickNeed(need);
+        });
+      });
+    }
+
+    function renderFilters() {
+      els.filtersPanel.classList.toggle("collapsed", !state.filtersOpen);
+      els.toggleFilters.textContent = state.filtersOpen ? "Hide Filters" : "Open Filters";
+
+      els.filterGroups.innerHTML = filterConfig.map((group) => {
+        const options = getOptions(group.key).filter((option) => {
+          if (group.key !== "counties" || !state.countySearch) return true;
+          return option.toLowerCase().includes(state.countySearch.toLowerCase());
+        });
+        const search = group.searchPlaceholder
+          ? `<input class="filter-search" id="countySearch" placeholder="${group.searchPlaceholder}" value="${state.countySearch}">`
+          : "";
+
+        return `
+          <div class="filter-group">
+            <p class="filter-title">${group.label}</p>
+            ${search}
+            <div class="chip-row">
+              ${options.map((option) => `
+                <button class="chip ${state.filters[group.key].has(option) ? "selected" : ""}"
+                  aria-pressed="${state.filters[group.key].has(option)}"
+                  data-filter-key="${group.key}"
+                  data-filter-value="${option}">
+                  ${option}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const countySearch = document.getElementById("countySearch");
+      if (countySearch) {
+        countySearch.addEventListener("input", (event) => {
+          state.countySearch = event.target.value;
+          renderFilters();
+        });
+      }
+
+      els.filterGroups.querySelectorAll("[data-filter-key]").forEach((button) => {
+        button.addEventListener("click", () => toggleFilter(button.dataset.filterKey, button.dataset.filterValue));
+      });
+    }
+
+    function renderActiveFilters() {
+      const chips = [];
+      Object.entries(state.filters).forEach(([key, values]) => {
+        values.forEach((value) => chips.push({ key, value }));
+      });
+
+      if (state.search.trim()) {
+        chips.unshift({ key: "search", value: `Search: ${state.search.trim()}` });
+      }
+
+      els.activeFilters.innerHTML = chips.map((chip) => `
+        <button class="active-chip" data-active-key="${chip.key}" data-active-value="${chip.value}">
+          ${chip.value} x
+        </button>
+      `).join("");
+
+      els.activeFilters.querySelectorAll("[data-active-key]").forEach((button) => {
+        button.addEventListener("click", () => {
+          if (button.dataset.activeKey === "search") {
+            state.search = "";
+            els.searchInput.value = "";
+          } else {
+            state.filters[button.dataset.activeKey].delete(button.dataset.activeValue);
+          }
+          state.activeQuickNeed = "";
+          render();
+        });
+      });
+    }
+
+    function renderCards(results) {
+      els.resultsGrid.innerHTML = results.map((org, index) => `
+        <article class="org-card">
+          <div class="card-top">
+            <h3>${org.name}</h3>
+            <a class="website-link" href="${org.website}" target="_blank" rel="noreferrer">Website -></a>
+          </div>
+          <div class="card-body">
+            <div class="meta">
+              <span><strong>Serves:</strong> ${org.counties.join(", ")}</span>
+              <span><strong>Contact:</strong> ${org.contact}</span>
+              <span><strong>Type:</strong> ${org.organizationType}</span>
+            </div>
+            <div class="service-list">
+              ${org.mainServices.map((service) => `<button class="service-tag main" data-tag-key="mainServices" data-tag-value="${service}">${service}</button>`).join("")}
+              ${org.additionalServices.slice(0, 3).map((service) => `<button class="service-tag" data-tag-key="additionalServices" data-tag-value="${service}">${service}</button>`).join("")}
+            </div>
+            <p class="description">${org.description}</p>
+            <div class="details-panel" id="details-${index}">
+              <strong>More detail:</strong> ${org.details}<br>
+              <strong>Who they serve:</strong> ${org.populations.join(", ")}
+            </div>
+            <div class="card-actions">
+              <button class="button primary" data-call="${org.phone}">Call</button>
+              <button class="button" data-email="${org.email}">Email</button>
+              <button class="button details" data-details="details-${index}">View Details</button>
+            </div>
+          </div>
+        </article>
+      `).join("");
+
+      els.resultsGrid.classList.toggle("list-view", state.view === "list");
+
+      els.resultsGrid.querySelectorAll("[data-tag-key]").forEach((button) => {
+        button.addEventListener("click", () => toggleFilter(button.dataset.tagKey, button.dataset.tagValue));
+      });
+
+      els.resultsGrid.querySelectorAll("[data-details]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const panel = document.getElementById(button.dataset.details);
+          panel.classList.toggle("open");
+          button.textContent = panel.classList.contains("open") ? "Hide Details" : "View Details";
+        });
+      });
+
+      els.resultsGrid.querySelectorAll("[data-call]").forEach((button) => {
+        button.addEventListener("click", () => {
+          window.location.href = `tel:${button.dataset.call}`;
+        });
+      });
+
+      els.resultsGrid.querySelectorAll("[data-email]").forEach((button) => {
+        button.addEventListener("click", () => {
+          window.location.href = `mailto:${button.dataset.email}`;
+        });
+      });
+    }
+
+    function renderMap(results) {
+      const positions = [
+        [8, 14], [54, 18], [30, 38], [68, 48], [16, 68], [48, 72], [78, 76], [38, 12]
+      ];
+      els.mapPanel.innerHTML = results.slice(0, 8).map((org, index) => {
+        const [left, top] = positions[index];
+        return `<div class="map-pin" style="left:${left}%;top:${top}%">${org.counties[0]}<br>${org.name}</div>`;
+      }).join("");
+    }
+
+    function renderResults() {
+      const results = getFilteredOrganizations();
+      const totalText = results.length === 1 ? "1 matching organization" : `${results.length} matching organizations`;
+      els.resultCount.textContent = totalText;
+
+      const activeParts = [];
+      Object.entries(state.filters).forEach(([key, values]) => {
+        if (values.size > 0) activeParts.push(...values);
+      });
+      els.resultSubtext.textContent = activeParts.length
+        ? `Showing results for ${activeParts.slice(0, 3).join(", ")}${activeParts.length > 3 ? " and more" : ""}.`
+        : "Use search or filters to narrow the directory.";
+
+      const hasResults = results.length > 0;
+      const showMap = state.view === "map" && hasResults;
+      els.resultsGrid.classList.toggle("hidden", !hasResults || showMap);
+      els.mapPanel.classList.toggle("active", showMap);
+      els.emptyState.classList.toggle("active", !hasResults);
+
+      renderCards(results);
+      renderMap(results);
+    }
+
+    function renderViewButtons() {
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === state.view);
+      });
+    }
+
+    function render() {
+      renderQuickNeeds();
+      renderFilters();
+      renderActiveFilters();
+      renderViewButtons();
+      renderResults();
+    }
+
+    els.searchInput.addEventListener("input", (event) => {
+      state.search = event.target.value;
+      state.activeQuickNeed = "";
+      render();
+    });
+
+    els.searchButton.addEventListener("click", () => {
+      state.search = els.searchInput.value;
+      render();
+    });
+
+    els.toggleFilters.addEventListener("click", () => {
+      state.filtersOpen = !state.filtersOpen;
+      render();
+    });
+
+    els.clearFiltersTop.addEventListener("click", clearFilters);
+    els.clearFiltersEmpty.addEventListener("click", clearFilters);
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.view = button.dataset.view;
+        render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>

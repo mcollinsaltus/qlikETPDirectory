@@ -1,0 +1,117 @@
+  <div class="page-shell">
+    <header class="masthead">
+      <div class="masthead-inner">
+        <div>
+          <span class="eyebrow">Participating Organization Directory</span>
+          <h1>Find the right organization faster.</h1>
+          <p class="lead">Live Qlik data with a friendlier search, filter, and contact experience layered on top.</p>
+        </div>
+        <aside class="help-card">
+          <strong>Need a quick place to start?</strong>
+          <span>Choose a common need below and the directory narrows the Qlik result set for you.</span>
+        </aside>
+      </div>
+    </header>
+
+    <section class="search-band" aria-label="Search">
+      <div class="search-panel">
+        <label class="search-box">
+          <span class="search-icon" aria-hidden="true"></span>
+          <input id="searchInput" autocomplete="off" placeholder="Search by organization, county, service, or keyword">
+        </label>
+        <div class="primary-actions">
+          <button class="button primary" id="searchButton">Search Directory</button>
+          <button class="button secondary" id="toggleFilters">Open Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <main class="content-wrap">
+      <section class="quick-needs" aria-label="Common needs">
+        <p class="section-label">I am looking for</p>
+        <div class="need-buttons" id="needButtons"></div>
+        <div class="emergency-resource" id="emergencyResource" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="workspace">
+        <aside class="filters" id="filtersPanel" aria-label="Filters">
+          <div class="filters-header">
+            <h2>Filters</h2>
+            <button class="clear-link" id="clearFiltersTop">Clear all</button>
+          </div>
+          <div id="filterGroups"></div>
+        </aside>
+
+        <section class="results" aria-label="Results">
+          <div class="results-toolbar">
+            <div>
+              <p class="result-count" id="resultCount">0 matching organizations</p>
+              <p class="result-subtext" id="resultSubtext">Use search or filters to narrow the directory.</p>
+            </div>
+            <div class="result-actions">
+              <button class="button secondary" id="printResults">Print Results</button>
+              <button class="button secondary map-print-button hidden" id="printMapOnly">Print Map</button>
+              <button class="button secondary map-print-button hidden" id="printMapList">Print Map + List</button>
+              <div class="view-toggle" aria-label="View options">
+                <button class="active" data-view="cards">Cards</button>
+                <button data-view="list">List</button>
+                <button data-view="map">Map</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="active-filter-row" id="activeFilters"></div>
+          <div id="qlikEmbedContainer" style="display:none"></div>
+          <div class="loading-state" id="loadingState">
+            <span class="spinner" aria-hidden="true"></span>
+            <strong>Loading the first page from Qlik...</strong>
+          </div>
+          <div class="error-state hidden" id="errorState"></div>
+          <div class="cards" id="resultsGrid"></div>
+          <div class="map-panel" id="mapPanel" aria-label="Map preview"></div>
+          <div class="pagination-actions hidden" id="paginationActions">
+            <button class="button secondary" id="loadMoreResults">Load more organizations</button>
+          </div>
+          <div class="print-view" id="printView"></div>
+          <div class="empty-state" id="emptyState">
+            <h3>No matching organizations found</h3>
+            <p>Try removing a filter, searching with fewer words, or starting over.</p>
+            <button class="button primary" id="clearFiltersEmpty">Clear filters</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="nearbyModal" role="dialog" aria-modal="true" aria-labelledby="nearbyTitle">
+    <div class="nearby-modal">
+      <div class="modal-header">
+        <div>
+          <h2 id="nearbyTitle">Find organizations near you</h2>
+          <p>Choose the option that feels most comfortable. Each path applies a county filter to the directory.</p>
+        </div>
+        <button class="close-modal" id="closeNearby" aria-label="Close">X</button>
+      </div>
+      <div class="nearby-options">
+        <section class="nearby-card">
+          <h3>Use my current location</h3>
+          <p>Your browser will ask permission. This prototype estimates the nearest available county from your coordinates.</p>
+          <div class="nearby-status" id="locationStatus">No location requested yet.</div>
+          <button class="button primary" id="useLocation">Use Location</button>
+        </section>
+        <section class="nearby-card">
+          <h3>Enter ZIP or county</h3>
+          <p>Type a Tennessee ZIP code or county name. ZIP support can be expanded with a full ZIP-to-county table later.</p>
+          <input id="nearbyText" placeholder="Example: 37203 or Davidson">
+          <button class="button primary" id="applyNearbyText">Apply</button>
+        </section>
+        <section class="nearby-card">
+          <h3>Choose a county</h3>
+          <p>Pick directly from counties currently available in the directory data.</p>
+          <select id="nearbyCountySelect"></select>
+          <button class="button primary" id="applyNearbyCounty">Apply County</button>
+        </section>
+      </div>
+    </div>
+  </div>
+

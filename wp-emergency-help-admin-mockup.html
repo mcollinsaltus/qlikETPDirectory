@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ETP Searchable Directory Config Admin Mockup</title>
+  <style>
+    :root {
+      --wp-blue: #2271b1;
+      --wp-blue-dark: #135e96;
+      --wp-bg: #f0f0f1;
+      --wp-menu: #1d2327;
+      --wp-menu-active: #2c3338;
+      --ink: #1d2327;
+      --muted: #646970;
+      --line: #c3c4c7;
+      --panel: #fff;
+      --success: #00a32a;
+      --warning: #d63638;
+      --teal: #087f83;
+      --teal-soft: #e2f1f1;
+      --gold-soft: #fcf3dc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--wp-bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    .mockup-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+    }
+
+    .admin-menu {
+      color: #c3c4c7;
+      background: var(--wp-menu);
+      min-height: 100vh;
+    }
+
+    .wp-logo {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      color: #fff;
+      background: #101517;
+      font-weight: 700;
+    }
+
+    .wp-logo-mark {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #8c8f94;
+      border-radius: 50%;
+      font-size: 13px;
+    }
+
+    .menu-item {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 14px;
+      color: #c3c4c7;
+      font-size: 14px;
+    }
+
+    .menu-item.active {
+      color: #fff;
+      background: var(--wp-menu-active);
+      border-left: 4px solid #72aee6;
+      padding-left: 10px;
+    }
+
+    .submenu {
+      padding: 4px 0 7px 44px;
+      background: #161b1f;
+    }
+
+    .submenu-item {
+      display: block;
+      padding: 6px 0;
+      color: #c3c4c7;
+      font-size: 13px;
+    }
+
+    .submenu-item.active {
+      color: #72aee6;
+      font-weight: 600;
+    }
+
+    .menu-icon {
+      width: 18px;
+      color: #8c8f94;
+      text-align: center;
+    }
+
+    .admin-main {
+      min-width: 0;
+    }
+
+    .top-bar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid #dcdcde;
+      background: #fff;
+    }
+
+    .top-bar strong { font-size: 14px; }
+
+    .user-chip {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .screen {
+      min-height: 812px;
+      padding: 28px 32px 42px;
+      border-bottom: 24px solid #dcdcde;
+    }
+
+    .screen-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 17px;
+      line-height: 1.3;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .button {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 12px;
+      border: 1px solid var(--wp-blue);
+      border-radius: 3px;
+      color: #fff;
+      background: var(--wp-blue);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .button.secondary {
+      color: var(--wp-blue);
+      background: #f6f7f7;
+    }
+
+    .button.ghost {
+      border-color: var(--line);
+      color: #2c3338;
+      background: #fff;
+    }
+
+    .button.danger {
+      border-color: var(--warning);
+      color: var(--warning);
+      background: #fff;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 8px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid #8c8f94;
+      border-radius: 3px;
+      background: #fff;
+      padding: 6px 9px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .notice {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border-left: 4px solid var(--success);
+      background: #fff;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #dcdcde;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #2c3338;
+      background: #f6f7f7;
+      font-weight: 600;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .row-actions a {
+      color: var(--wp-blue);
+      text-decoration: none;
+    }
+
+    .row-actions a.delete {
+      color: var(--warning);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      color: #0a4b1a;
+      background: #edfaef;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-pill.default {
+      color: #6b4e00;
+      background: var(--gold-soft);
+    }
+
+    .id-code {
+      display: inline-block;
+      max-width: 330px;
+      overflow: hidden;
+      color: #50575e;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      color: #1d2327;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .section-card {
+      margin-top: 14px;
+      border: 1px solid #dcdcde;
+      background: #fff;
+    }
+
+    .section-title-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid #dcdcde;
+      background: #f6f7f7;
+    }
+
+    .resource-row {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr) minmax(180px, .8fr) auto;
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border-top: 1px solid #f0f0f1;
+    }
+
+    .resource-row:first-of-type {
+      border-top: 0;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .publish-meta {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .publish-meta strong {
+      color: var(--ink);
+    }
+
+    .preview-box {
+      border-left: 5px solid #d95846;
+      border-radius: 3px;
+      background: #fff8e8;
+      padding: 15px;
+    }
+
+    .preview-box h3 {
+      margin-bottom: 8px;
+      font-size: 17px;
+    }
+
+    .preview-box p {
+      margin: 7px 0;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .preview-box a {
+      color: #075f65;
+      font-weight: 700;
+    }
+
+    .json-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .url-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #8c8f94;
+      border-radius: 3px;
+      background: #fff;
+    }
+
+    .url-box code {
+      min-width: 0;
+      overflow: hidden;
+      color: #2c3338;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    pre {
+      overflow: auto;
+      max-height: 470px;
+      margin: 0;
+      padding: 14px;
+      border: 1px solid #dcdcde;
+      background: #101517;
+      color: #d7e8f7;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .check {
+      display: flex;
+      gap: 8px;
+      color: #2c3338;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .check span {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .mockup-label {
+      margin: 0 0 10px;
+      color: #50575e;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="mockup-page">
+    <aside class="admin-menu">
+      <div class="wp-logo"><span class="wp-logo-mark">W</span> WordPress</div>
+      <div class="menu-item"><span class="menu-icon">▦</span> Dashboard</div>
+      <div class="menu-item"><span class="menu-icon">◆</span> Posts</div>
+      <div class="menu-item"><span class="menu-icon">▣</span> Media</div>
+      <div class="menu-item"><span class="menu-icon">▤</span> Pages</div>
+      <div class="menu-item active"><span class="menu-icon">!</span> ETP Directory Config</div>
+      <div class="submenu">
+        <span class="submenu-item active">Emergency Help</span>
+        <span class="submenu-item">JSON Status</span>
+        <span class="submenu-item">Access Settings</span>
+      </div>
+      <div class="menu-item"><span class="menu-icon">◌</span> Users</div>
+      <div class="menu-item"><span class="menu-icon">⚙</span> Settings</div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="top-bar">
+        <strong>Participating Organization Directory</strong>
+        <span class="user-chip">Howdy, ETP Searchable Directory Admin</span>
+      </div>
+
+      <section class="screen" id="screen-list">
+        <p class="mockup-label">Screenshot 1: Resource list</p>
+        <div class="screen-header">
+          <div>
+            <h1>Emergency Help Resources</h1>
+            <p>ETP Searchable Directory Config / Emergency Help. Manage the emergency help content shown for each Qlik app id.</p>
+          </div>
+          <a class="button" href="#screen-edit">+ Add app-specific entry</a>
+        </div>
+
+        <div class="notice">
+          <div>
+            <strong>JSON published successfully.</strong>
+            <p>Last generated today at 10:42 AM. The directory is reading from the uploads JSON file.</p>
+          </div>
+          <a class="button secondary" href="#screen-json">View JSON status</a>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-box">
+            <input style="width:280px" value="" placeholder="Search app id, label, or hotline">
+            <button class="button ghost">Search entries</button>
+          </div>
+          <button class="button secondary">Import current JSON</button>
+        </div>
+
+        <div class="panel">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:30%">Entry</th>
+                <th>Qlik app id</th>
+                <th style="width:24%">Content summary</th>
+                <th style="width:13%">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <strong>Default fallback</strong>
+                  <div class="row-actions">
+                    <a href="#screen-edit">Edit</a>
+                    <a href="#screen-json">Preview JSON</a>
+                  </div>
+                </td>
+                <td><span class="id-code">Used when no matching data-app-id exists</span></td>
+                <td>Non-state-specific 911 information, National Human Trafficking Hotline</td>
+                <td><span class="status-pill default">Required</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Tennessee</strong>
+                  <div class="row-actions">
+                    <a href="#screen-edit">Edit</a>
+                    <a href="#">Duplicate</a>
+                    <a class="delete" href="#">Delete</a>
+                  </div>
+                </td>
+                <td><span class="id-code">44157b6c-9419-4f46-935e-4f9a91a1489a</span></td>
+                <td>Tennessee Human Trafficking Hotline, National Human Trafficking Hotline</td>
+                <td><span class="status-pill">Published</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Georgia pilot</strong>
+                  <div class="row-actions">
+                    <a href="#screen-edit">Edit</a>
+                    <a href="#">Duplicate</a>
+                    <a class="delete" href="#">Delete</a>
+                  </div>
+                </td>
+                <td><span class="id-code">5fa2e944-2f44-4b18-889a-0ccf70c81425</span></td>
+                <td>State hotline, 911 reminder, National Human Trafficking Hotline</td>
+                <td><span class="status-pill">Published</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-edit">
+        <p class="mockup-label">Screenshot 2: Add/edit entry</p>
+        <div class="screen-header">
+          <div>
+            <h1>Edit ETP Directory Help Entry</h1>
+            <p>Changes publish immediately after validation. Only ETP Searchable Directory Admin users can save changes.</p>
+          </div>
+          <div class="card-actions">
+            <button class="button ghost">Cancel</button>
+            <button class="button">Save and publish JSON</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Entry details</h2>
+              <span class="status-pill">Published</span>
+            </div>
+            <div class="panel-body">
+              <div class="field-grid">
+                <div class="field">
+                  <label>Internal label</label>
+                  <input value="Tennessee">
+                  <span class="hint">Only shown in WordPress admin.</span>
+                </div>
+                <div class="field">
+                  <label>Qlik app id</label>
+                  <input value="44157b6c-9419-4f46-935e-4f9a91a1489a">
+                  <span class="hint">Must match the page data-app-id exactly.</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>Public heading</label>
+                <input value="Emergency help resources">
+              </div>
+              <div class="field">
+                <label>Intro message</label>
+                <textarea>In Tennessee, you should contact the state-specific hotline or the national hotline. If anyone is in immediate danger, always call 911 first.</textarea>
+              </div>
+
+              <div class="section-card">
+                <div class="section-title-row">
+                  <div>
+                    <h3>Section 1</h3>
+                    <p>Tennessee Human Trafficking Hotline</p>
+                  </div>
+                  <button class="button ghost">Remove section</button>
+                </div>
+                <div class="panel-body">
+                  <div class="field">
+                    <label>Section title</label>
+                    <input value="Tennessee Human Trafficking Hotline">
+                  </div>
+                  <div class="field">
+                    <label>Description</label>
+                    <textarea>This is the primary state resource, operated in partnership with the Tennessee Bureau of Investigation (TBI).</textarea>
+                  </div>
+                </div>
+                <div class="resource-row">
+                  <div><label>Label</label><input value="Phone"></div>
+                  <div><label>Display text</label><input value="1-855-55-TNHTH (1-855-558-6484)"></div>
+                  <div><label>Link URL</label><input value="tel:18555586484"></div>
+                  <button class="button danger">Remove</button>
+                </div>
+                <div class="resource-row">
+                  <div><label>Label</label><input value="Online Reporting"></div>
+                  <div><label>Display text</label><input value="ithastostop.com"></div>
+                  <div><label>Link URL</label><input value="https://ithastostop.com"></div>
+                  <button class="button danger">Remove</button>
+                </div>
+                <div class="panel-body">
+                  <button class="button secondary">+ Add resource item</button>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button class="button secondary">+ Add section</button>
+                <button class="button">Save and publish JSON</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="side-stack">
+            <div class="panel">
+              <div class="panel-header"><h2>Directory preview</h2></div>
+              <div class="panel-body">
+                <div class="preview-box">
+                  <h3>Emergency help resources</h3>
+                  <p><strong>In Tennessee, you should contact the state-specific hotline or the national hotline. If anyone is in immediate danger, always call 911 first.</strong></p>
+                  <p><strong>Tennessee Human Trafficking Hotline</strong></p>
+                  <p>This is the primary state resource, operated in partnership with the Tennessee Bureau of Investigation (TBI).</p>
+                  <p><strong>Phone:</strong> <a>1-855-55-TNHTH (1-855-558-6484)</a></p>
+                  <p><strong>Online Reporting:</strong> <a>ithastostop.com</a></p>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h2>Validation</h2></div>
+              <div class="panel-body">
+                <div class="checklist">
+                  <div class="check"><span>✓</span> App id is unique</div>
+                  <div class="check"><span>✓</span> Required heading and intro are filled</div>
+                  <div class="check"><span>✓</span> URLs use approved schemes</div>
+                  <div class="check"><span>✓</span> Default fallback still exists</div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-json">
+        <p class="mockup-label">Screenshot 3: Publish and JSON status</p>
+        <div class="screen-header">
+          <div>
+            <h1>ETP Searchable Directory Config Status</h1>
+            <p>Confirm what the directory will load and copy the URL for the page embed.</p>
+          </div>
+          <button class="button">Regenerate JSON</button>
+        </div>
+
+        <div class="json-shell">
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Public JSON file</h2>
+              <span class="status-pill">Writable</span>
+            </div>
+            <div class="panel-body">
+              <div class="field">
+                <label>Use this URL in data-emergency-help-url</label>
+                <div class="url-box">
+                  <code>https://example.org/wp-content/uploads/directory-config/emergency-help-resources.json</code>
+                  <button class="button ghost">Copy</button>
+                </div>
+              </div>
+              <div class="field-grid">
+                <div class="panel" style="box-shadow:none">
+                  <div class="panel-body">
+                    <h3>3 entries</h3>
+                    <p>1 default fallback, 2 app-specific resources</p>
+                  </div>
+                </div>
+                <div class="panel" style="box-shadow:none">
+                  <div class="panel-body">
+                    <h3>Last published</h3>
+                    <p>May 28, 2026 at 10:42 AM</p>
+                  </div>
+                </div>
+              </div>
+              <div class="checklist">
+                <div class="check"><span>✓</span> JSON file exists in uploads directory</div>
+                <div class="check"><span>✓</span> Default fallback includes 911 and National Human Trafficking Hotline</div>
+                <div class="check"><span>✓</span> Tennessee app id has a matching resource entry</div>
+                <div class="check"><span>✓</span> The current JSON format matches the directory frontend</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>JSON preview</h2>
+              <button class="button ghost">Download</button>
+            </div>
+            <pre>{
+  "default": {
+    "heading": "Emergency help resources",
+    "intro": "If anyone is in immediate danger...",
+    "sections": [
+      {
+        "title": "Non-state-specific 911 information",
+        "items": [
+          {
+            "label": "Phone",
+            "text": "911",
+            "href": "tel:911"
+          }
+        ]
+      }
+    ]
+  },
+  "resources": {
+    "44157b6c-9419-4f46-935e-4f9a91a1489a": {
+      "heading": "Emergency help resources",
+      "sections": [
+        {
+          "title": "Tennessee Human Trafficking Hotline"
+        }
+      ]
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

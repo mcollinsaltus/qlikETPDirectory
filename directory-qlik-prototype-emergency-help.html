@@ -1,0 +1,2878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qlik Directory Prototype - Infinite Scroll</title>
+  <script crossorigin="anonymous" type="application/javascript"
+    src="https://cdn.jsdelivr.net/npm/@qlik/embed-web-components@1/dist/index.min.js"
+    data-host="https://3u0ob6mw8hfz2n1.se.qlikcloud.com"
+    data-client-id="6363572c7d5793f287ee2b9c6183eefa"
+    data-access-code="8d8cbd22-b349-4dd7-ac34-364b3f31a332.-VUWIAAW2LyAzVgjxafe_RkOwl3bRw097pMksr9UzSI"
+    data-auth-type="anonymous"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIINfQK7Gph3Ds7w+6f4j8pr53hWeuN1C+U=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --ink: #142235;
+      --muted: #5d6b7a;
+      --line: #dbe5ea;
+      --paper: #ffffff;
+      --surface: #f4f8f9;
+      --teal: #087f83;
+      --teal-dark: #075f65;
+      --teal-soft: #d9f0ef;
+      --blue: #276fbf;
+      --blue-soft: #e3effc;
+      --gold: #f2b84b;
+      --gold-soft: #fff3d8;
+      --green: #3a8f5c;
+      --green-soft: #e2f1e7;
+      --coral: #d95846;
+      --shadow: 0 16px 36px rgba(21, 38, 52, .12);
+      --small-shadow: 0 8px 20px rgba(21, 38, 52, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--surface);
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .masthead {
+      color: #fff;
+      padding: 28px 32px 34px;
+      background:
+        linear-gradient(135deg, rgba(8, 127, 131, .96), rgba(7, 95, 101, .96)),
+        url("data:image/svg+xml,%3Csvg width='1200' height='260' viewBox='0 0 1200 260' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 185C105 142 206 135 303 164C429 201 527 228 656 164C791 96 928 99 1200 141V260H0Z' fill='%23ffffff' fill-opacity='.12'/%3E%3Cpath d='M0 92C172 139 293 111 423 75C580 32 730 34 881 87C1012 133 1118 128 1200 101V0H0Z' fill='%23ffffff' fill-opacity='.08'/%3E%3C/svg%3E");
+      background-size: cover;
+    }
+
+    .masthead-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 5px 12px;
+      border: 1px solid rgba(255, 255, 255, .36);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .12);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 16px 0 8px;
+      max-width: 840px;
+      font-size: 38px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 0;
+      color: rgba(255, 255, 255, .9);
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .help-card {
+      width: 280px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, .28);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .14);
+    }
+
+    .help-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 18px;
+    }
+
+    .help-card span {
+      display: block;
+      color: rgba(255, 255, 255, .86);
+      line-height: 1.45;
+    }
+
+    .search-band {
+      position: relative;
+      z-index: 2;
+      max-width: 1440px;
+      margin: -24px auto 0;
+      padding: 0 32px;
+    }
+
+    .search-panel {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .search-box { position: relative; }
+
+    .search-box .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--muted);
+      border-radius: 50%;
+      color: var(--muted);
+      transform: translateY(-50%);
+    }
+
+    .search-box .search-icon::after {
+      content: "";
+      position: absolute;
+      right: -7px;
+      bottom: -5px;
+      width: 9px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--muted);
+      transform: rotate(45deg);
+      transform-origin: left center;
+    }
+
+    .search-box input {
+      width: 100%;
+      min-height: 56px;
+      padding: 0 18px 0 48px;
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fff;
+      font-size: 17px;
+    }
+
+    .search-box input:focus,
+    .filter-search:focus {
+      outline: 3px solid rgba(39, 111, 191, .2);
+      border-color: var(--blue);
+    }
+
+    .primary-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .button {
+      min-height: 44px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--ink);
+      background: #e9f0f3;
+      font-weight: 700;
+    }
+
+    .button.primary {
+      color: #fff;
+      background: var(--teal);
+    }
+
+    .button.secondary {
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+    }
+
+    .button.danger {
+      color: #fff;
+      background: var(--coral);
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    .content-wrap {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 22px 32px 42px;
+    }
+
+    .quick-needs {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+      margin: 18px 0 20px;
+    }
+
+    .section-label {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .need-buttons,
+    .chip-row,
+    .service-list,
+    .active-filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .emergency-resource {
+      display: none;
+      grid-column: 1 / -1;
+      margin-top: 6px;
+      width: min(980px, 100%);
+      justify-self: center;
+      padding: 18px;
+      border: 1px solid #f0b429;
+      border-left: 6px solid #d95846;
+      border-radius: 8px;
+      background: #fff8e8;
+      box-shadow: var(--small-shadow);
+    }
+
+    .emergency-resource.active {
+      display: block;
+    }
+
+    .emergency-resource h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .emergency-resource h3 {
+      margin: 14px 0 6px;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .emergency-resource p {
+      margin: 6px 0;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    .emergency-resource a {
+      color: var(--teal-dark);
+      font-weight: 700;
+    }
+
+    .emergency-alert {
+      font-weight: 700;
+    }
+
+    .need {
+      min-height: 42px;
+      padding: 0 14px;
+      border: 1px solid #cbdde7;
+      border-radius: 8px;
+      color: #183044;
+      background: #fff;
+      box-shadow: var(--small-shadow);
+      font-weight: 700;
+    }
+
+    .need.featured {
+      border-color: #f1d392;
+      color: #65420a;
+      background: var(--gold-soft);
+    }
+
+    .need.active {
+      color: #fff;
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 316px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .workspace.filters-hidden {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .filters {
+      position: sticky;
+      top: 16px;
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--small-shadow);
+    }
+
+    .filters.collapsed {
+      display: none;
+    }
+
+    .filters-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f9fbfc;
+    }
+
+    .filters-header h2,
+    .filter-title {
+      margin: 0;
+      font-weight: 800;
+    }
+
+    .filters-header h2 { font-size: 20px; }
+    .filter-title { margin-bottom: 10px; font-size: 16px; }
+
+    .clear-link {
+      border: 0;
+      color: var(--blue);
+      background: transparent;
+      font-weight: 700;
+    }
+
+    .filter-group {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .filter-group:last-child { border-bottom: 0; }
+
+    .filter-search {
+      width: 100%;
+      min-height: 40px;
+      margin-bottom: 10px;
+      padding: 0 12px;
+      border: 1px solid #cbd9e0;
+      border-radius: 8px;
+    }
+
+    .filter-hint {
+      margin: -2px 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .chip-row.scroll-list {
+      max-height: 228px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .chip {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: #193047;
+      background: #dceaf1;
+    }
+
+    .chip.selected,
+    .chip[aria-pressed="true"] {
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .chip.warm { background: var(--gold-soft); border-color: #f3ce7d; }
+    .chip.green { background: var(--green-soft); border-color: #b8dcc5; }
+
+    .results { min-width: 0; }
+
+    .results-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .result-count {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .result-subtext {
+      margin: 5px 0 0;
+      color: var(--muted);
+    }
+
+    .view-toggle {
+      display: inline-flex;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .view-toggle button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 700;
+    }
+
+    .view-toggle button.active {
+      color: #fff;
+      background: var(--teal);
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .active-filter-row {
+      margin-bottom: 18px;
+    }
+
+    .active-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 999px;
+      color: #17324b;
+      background: var(--blue-soft);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .cards.list-view {
+      grid-template-columns: 1fr;
+    }
+
+    .org-card {
+      display: flex;
+      min-height: 360px;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--small-shadow);
+    }
+
+    .list-view .org-card {
+      min-height: 0;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 18px 12px;
+      border-top: 5px solid var(--teal);
+    }
+
+    .org-card:nth-child(2n) .card-top { border-top-color: var(--blue); }
+    .org-card:nth-child(3n) .card-top { border-top-color: var(--gold); }
+    .org-card:nth-child(4n) .card-top { border-top-color: var(--green); }
+
+    .org-card h3 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .website-link {
+      white-space: nowrap;
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .card-body {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 0 18px 16px;
+    }
+
+    .meta {
+      display: grid;
+      gap: 6px;
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .meta strong { color: var(--ink); }
+
+    .meta .county-summary {
+      display: block;
+    }
+
+    .distance-pill {
+      display: inline-flex;
+      width: fit-content;
+      min-height: 28px;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #075f65;
+      background: var(--teal-soft);
+      font-weight: 800;
+    }
+
+    .service-list {
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    .service-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border: 0;
+      border-radius: 999px;
+      color: #183044;
+      background: #edf4f7;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .service-tag.main {
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+    }
+
+    .description {
+      margin: 0 0 18px;
+      color: #34475a;
+      line-height: 1.5;
+    }
+
+    .details-panel {
+      display: none;
+      margin: -4px 0 18px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f8fbfc;
+      color: #34475a;
+      line-height: 1.45;
+    }
+
+    .details-panel.open {
+      display: block;
+    }
+
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: auto;
+    }
+
+    .card-actions .details {
+      grid-column: 1 / -1;
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+    }
+
+    .map-panel,
+    .empty-state,
+    .loading-state,
+    .error-state {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--small-shadow);
+    }
+
+    .map-panel {
+      display: none;
+      min-height: 420px;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-panel.active { display: block; }
+
+    .map-canvas {
+      min-height: 520px;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .map-notice {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      z-index: 500;
+      max-width: min(520px, calc(100% - 28px));
+      padding: 10px 12px;
+      border: 1px solid rgba(219, 229, 234, .9);
+      border-radius: 8px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, .92);
+      box-shadow: var(--small-shadow);
+      font-size: 13px;
+    }
+
+    .map-legend {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      z-index: 500;
+      display: grid;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(219, 229, 234, .9);
+      border-radius: 8px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, .94);
+      box-shadow: var(--small-shadow);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .map-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .map-legend-dot {
+      width: 12px;
+      height: 12px;
+      border: 2px solid #fff;
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px rgba(20, 34, 53, .18);
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .map-number-marker {
+      display: grid;
+      place-items: center;
+      width: 26px !important;
+      height: 26px !important;
+      margin-left: -13px !important;
+      margin-top: -13px !important;
+      border: 2px solid #fff;
+      border-radius: 999px;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(20, 34, 53, .28);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .map-number-marker svg {
+      display: block;
+      width: 26px;
+      height: 26px;
+      overflow: visible;
+    }
+
+    .map-number-marker.actual { background: var(--teal); }
+    .map-number-marker.estimate { background: var(--blue); }
+
+    .map-fallback {
+      min-height: 420px;
+      background:
+        linear-gradient(90deg, rgba(8, 127, 131, .10) 1px, transparent 1px),
+        linear-gradient(rgba(39, 111, 191, .08) 1px, transparent 1px),
+        #fff;
+      background-size: 54px 54px;
+      position: relative;
+      border-radius: 8px;
+    }
+
+    .map-pin {
+      position: absolute;
+      min-width: 148px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--teal);
+      box-shadow: var(--small-shadow);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .map-pin:nth-child(2n) { background: var(--blue); }
+    .map-pin:nth-child(3n) { background: var(--green); }
+
+    .leaflet-popup-content {
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .leaflet-container {
+      position: relative;
+      overflow: hidden;
+      background: #dce8ee;
+      outline-offset: 1px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .leaflet-pane,
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow,
+    .leaflet-tile-container,
+    .leaflet-pane > svg,
+    .leaflet-pane > canvas,
+    .leaflet-zoom-box,
+    .leaflet-image-layer,
+    .leaflet-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow {
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .leaflet-tile {
+      width: 256px;
+      height: 256px;
+      border: 0;
+      visibility: hidden;
+    }
+
+    .leaflet-tile-loaded { visibility: inherit; }
+    .leaflet-map-pane { z-index: 400; }
+    .leaflet-tile-pane { z-index: 200; }
+    .leaflet-overlay-pane { z-index: 400; }
+    .leaflet-shadow-pane { z-index: 500; }
+    .leaflet-marker-pane { z-index: 600; }
+    .leaflet-tooltip-pane { z-index: 650; }
+    .leaflet-popup-pane { z-index: 700; }
+    .leaflet-interactive {
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .leaflet-control {
+      position: relative;
+      z-index: 800;
+      pointer-events: auto;
+    }
+
+    .leaflet-top,
+    .leaflet-bottom {
+      position: absolute;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .leaflet-top { top: 0; }
+    .leaflet-right { right: 0; }
+    .leaflet-bottom { bottom: 0; }
+    .leaflet-left { left: 0; }
+
+    .leaflet-control-zoom {
+      border: 1px solid rgba(20, 34, 53, .18);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--small-shadow);
+    }
+
+    .leaflet-control-zoom a {
+      display: block;
+      width: 32px;
+      height: 32px;
+      line-height: 30px;
+      color: var(--ink);
+      background: #fff;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .leaflet-popup {
+      position: absolute;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .leaflet-popup-content-wrapper {
+      padding: 0;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--small-shadow);
+      text-align: left;
+    }
+
+    .leaflet-popup-content {
+      margin: 0;
+      min-width: 260px;
+    }
+
+    .leaflet-popup-tip-container,
+    .leaflet-control-attribution {
+      display: none;
+    }
+
+    .leaflet-tooltip {
+      position: absolute;
+      z-index: 650;
+      max-width: 260px;
+      padding: 6px 8px;
+      border: 1px solid rgba(20, 34, 53, .16);
+      border-radius: 6px;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: var(--small-shadow);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: normal;
+      pointer-events: none;
+    }
+
+    .map-card {
+      padding: 14px;
+      color: var(--ink);
+    }
+
+    .map-card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .map-card p {
+      margin: 6px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .map-card strong { color: var(--ink); }
+
+    .map-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0;
+    }
+
+    .map-card-tags span {
+      padding: 4px 7px;
+      border-radius: 999px;
+      color: #005d63;
+      background: var(--teal-soft);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .map-card-link {
+      display: inline-flex;
+      margin-top: 8px;
+      color: #075f65;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .empty-state {
+      display: none;
+      text-align: center;
+    }
+
+    .empty-state.active { display: block; }
+
+    .loading-state {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      color: var(--muted);
+    }
+
+    .loading-state.hidden,
+    .error-state.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 26px;
+      height: 26px;
+      border: 3px solid var(--teal-soft);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    .error-state {
+      margin-bottom: 18px;
+      border-color: #f1beb6;
+      background: #fff6f4;
+      color: #7c2e22;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state h3 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .empty-state p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .pagination-actions {
+      display: flex;
+      justify-content: center;
+      margin: 22px 0 0;
+    }
+
+    .pagination-actions.hidden {
+      display: none;
+    }
+
+    .print-view {
+      display: none;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .masthead,
+      .search-band,
+      .quick-needs,
+      .filters,
+      .results-toolbar,
+      .active-filter-row,
+      .cards,
+      .map-panel,
+      .empty-state,
+      .pagination-actions,
+      .modal-backdrop {
+        display: none !important;
+      }
+
+      .content-wrap,
+      .workspace,
+      .results {
+        display: block;
+        max-width: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .print-view {
+        display: block;
+        color: #111;
+        font-size: 11pt;
+      }
+
+      .print-org {
+        break-inside: avoid;
+        margin: 0 0 14pt;
+        padding-bottom: 10pt;
+        border-bottom: 1px solid #ccc;
+      }
+
+      .print-org h2 {
+        margin: 0 0 4pt;
+        font-size: 14pt;
+      }
+
+      .print-org p {
+        margin: 2pt 0;
+      }
+
+      .print-map {
+        break-inside: avoid;
+        margin: 12pt 0 16pt;
+        padding: 10pt;
+        border: 1px solid #aaa;
+      }
+
+      .print-map h2 {
+        margin: 0 0 6pt;
+        font-size: 14pt;
+      }
+
+      .print-map-legend {
+        display: flex;
+        gap: 14pt;
+        margin: 6pt 0 10pt;
+        font-size: 10pt;
+      }
+
+      .print-map-frame {
+        position: relative;
+        width: 100%;
+        min-height: 4.6in;
+        margin: 8pt 0;
+        border: 1px solid #bbb;
+        background: #eef5f6;
+      }
+
+      .print-map-fallback {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #53636a;
+        font-size: 10pt;
+        text-align: center;
+      }
+
+      .print-map-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9.5pt;
+      }
+
+      .print-map-table th,
+      .print-map-table td {
+        padding: 4pt;
+        border: 1px solid #ccc;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .print-map-table th {
+        background: #eee;
+      }
+
+      .print-map-svg {
+        position: relative;
+        z-index: 1;
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      body.print-map-only .print-view,
+      body.print-map-list .print-view {
+        display: block !important;
+      }
+
+      body.print-map-only .map-panel,
+      body.print-map-list .map-panel {
+        display: none !important;
+      }
+
+      .map-legend-dot,
+      .map-number-marker,
+      .map-number-marker svg {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(9, 24, 38, .54);
+    }
+
+    .modal-backdrop.active { display: flex; }
+
+    .nearby-modal {
+      width: min(920px, 100%);
+      max-height: min(760px, calc(100vh - 48px));
+      overflow: auto;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+      padding: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-header h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .modal-header p,
+    .nearby-card p,
+    .nearby-status {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .close-modal {
+      min-width: 40px;
+      min-height: 40px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--ink);
+      background: #edf3f6;
+      font-weight: 800;
+    }
+
+    .nearby-options {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      padding: 22px;
+    }
+
+    .nearby-card {
+      display: flex;
+      min-height: 260px;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdfe;
+    }
+
+    .nearby-card h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .nearby-card input,
+    .nearby-card select {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      border: 1px solid #cbd9e0;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .nearby-card .button { margin-top: auto; }
+
+    .nearby-status {
+      min-height: 42px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f1f6f8;
+      font-size: 14px;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 1100px) {
+      .workspace { grid-template-columns: 1fr; }
+      .filters { position: static; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .masthead, .search-band, .content-wrap {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .masthead-inner,
+      .search-panel,
+      .quick-needs {
+        grid-template-columns: 1fr;
+      }
+
+      .help-card { width: 100%; }
+      h1 { font-size: 31px; }
+
+      .primary-actions,
+      .results-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .cards { grid-template-columns: 1fr; }
+      .card-top { flex-direction: column; }
+      .website-link { white-space: normal; }
+      .nearby-options { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-app-id="44157b6c-9419-4f46-935e-4f9a91a1489a" data-emergency-help-url="emergency-help-resources.json">
+  <div class="page-shell">
+    <header class="masthead">
+      <div class="masthead-inner">
+        <div>
+          <span class="eyebrow">Participating Organization Directory</span>
+          <h1>Find the right organization faster.</h1>
+          <p class="lead">Live Qlik data with a friendlier search, filter, and contact experience layered on top.</p>
+        </div>
+        <aside class="help-card">
+          <strong>Need a quick place to start?</strong>
+          <span>Choose a common need below and the directory narrows the Qlik result set for you.</span>
+        </aside>
+      </div>
+    </header>
+
+    <section class="search-band" aria-label="Search">
+      <div class="search-panel">
+        <label class="search-box">
+          <span class="search-icon" aria-hidden="true"></span>
+          <input id="searchInput" autocomplete="off" placeholder="Search by organization, county, service, or keyword">
+        </label>
+        <div class="primary-actions">
+          <button class="button primary" id="searchButton">Search Directory</button>
+          <button class="button secondary" id="toggleFilters">Open Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <main class="content-wrap">
+      <section class="quick-needs" aria-label="Common needs">
+        <p class="section-label">I am looking for</p>
+        <div class="need-buttons" id="needButtons"></div>
+        <div class="emergency-resource" id="emergencyResource" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="workspace">
+        <aside class="filters" id="filtersPanel" aria-label="Filters">
+          <div class="filters-header">
+            <h2>Filters</h2>
+            <button class="clear-link" id="clearFiltersTop">Clear all</button>
+          </div>
+          <div id="filterGroups"></div>
+        </aside>
+
+        <section class="results" aria-label="Results">
+          <div class="results-toolbar">
+            <div>
+              <p class="result-count" id="resultCount">0 matching organizations</p>
+              <p class="result-subtext" id="resultSubtext">Use search or filters to narrow the directory.</p>
+            </div>
+            <div class="result-actions">
+              <button class="button secondary" id="printResults">Print Results</button>
+              <button class="button secondary map-print-button hidden" id="printMapOnly">Print Map</button>
+              <button class="button secondary map-print-button hidden" id="printMapList">Print Map + List</button>
+              <div class="view-toggle" aria-label="View options">
+                <button class="active" data-view="cards">Cards</button>
+                <button data-view="list">List</button>
+                <button data-view="map">Map</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="active-filter-row" id="activeFilters"></div>
+          <div id="qlikEmbedContainer" style="display:none"></div>
+          <div class="loading-state" id="loadingState">
+            <span class="spinner" aria-hidden="true"></span>
+            <strong>Loading organizations from Qlik...</strong>
+          </div>
+          <div class="error-state hidden" id="errorState"></div>
+          <div class="cards" id="resultsGrid"></div>
+          <div class="map-panel" id="mapPanel" aria-label="Map preview"></div>
+          <div class="pagination-actions hidden" id="paginationActions">
+            <button class="button secondary" id="loadMoreResults" disabled>Scroll to load more organizations</button>
+          </div>
+          <div class="print-view" id="printView"></div>
+          <div class="empty-state" id="emptyState">
+            <h3>No matching organizations found</h3>
+            <p>Try removing a filter, searching with fewer words, or starting over.</p>
+            <button class="button primary" id="clearFiltersEmpty">Clear filters</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="nearbyModal" role="dialog" aria-modal="true" aria-labelledby="nearbyTitle">
+    <div class="nearby-modal">
+      <div class="modal-header">
+        <div>
+          <h2 id="nearbyTitle">Find organizations near you</h2>
+          <p>Choose the option that feels most comfortable. Each path applies a county filter to the directory.</p>
+        </div>
+        <button class="close-modal" id="closeNearby" aria-label="Close">X</button>
+      </div>
+      <div class="nearby-options">
+        <section class="nearby-card">
+          <h3>Use my current location</h3>
+          <p>Your browser will ask permission. This prototype estimates the nearest available county from your coordinates.</p>
+          <div class="nearby-status" id="locationStatus">No location requested yet.</div>
+          <button class="button primary" id="useLocation">Use Location</button>
+        </section>
+        <section class="nearby-card">
+          <h3>Enter ZIP or county</h3>
+          <p>Type a Tennessee ZIP code or county name. ZIP support can be expanded with a full ZIP-to-county table later.</p>
+          <input id="nearbyText" placeholder="Example: 37203 or Davidson">
+          <button class="button primary" id="applyNearbyText">Apply</button>
+        </section>
+        <section class="nearby-card">
+          <h3>Choose a county</h3>
+          <p>Pick directly from counties currently available in the directory data.</p>
+          <select id="nearbyCountySelect"></select>
+          <button class="button primary" id="applyNearbyCounty">Apply County</button>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_QLIK_APP_ID = "44157b6c-9419-4f46-935e-4f9a91a1489a";
+    const directoryDatasetConfig = document.querySelector("[data-app-id]");
+    const urlAppId = new URLSearchParams(window.location.search).get("appId");
+    const QLIK_APP_ID = (urlAppId || directoryDatasetConfig?.dataset.appId || DEFAULT_QLIK_APP_ID).trim();
+    const EMERGENCY_HELP_URL = directoryDatasetConfig?.dataset.emergencyHelpUrl || "emergency-help-resources.json";
+    const QLIK_SHEET_ID = "mGLGNCp";
+    const VALUE_NULL_STRINGS = ["-", "tba"];
+    const NULL_REPLACEMENT = "null";
+    const FIELD_VALUE_DELIMITER = "|!|";
+
+    const tableFields = [
+      { name: "Org Name", definition: "Organization", cubeRole: "dimension", suppressNull: true, showFilter: false },
+      { name: "Contact Name", definition: "=If(Len(CommunityContactLastName) > 1, CommunityContactFirstName &' '& CommunityContactLastName)", cubeRole: "measure", suppressNull: true, showFilter: false },
+      { name: "Mission Statement", definition: "=[Mission Statement]", cubeRole: "measure", suppressNull: false, showFilter: false },
+      { name: "County", definition: `=concat(distinct [county],'${FIELD_VALUE_DELIMITER}', county_sort)`, cubeRole: "measure", suppressNull: false, showFilter: true },
+      { name: "Sector", definition: "=[OrganizationType]", cubeRole: "measure", suppressNull: false, showFilter: true },
+      { name: "Address", definition: "=[address_full]", cubeRole: "measure", suppressNull: false, showFilter: false },
+      { name: "Contact Phone", definition: "=[contact_phone]", cubeRole: "measure", suppressNull: false, showFilter: false },
+      { name: "Contact Email", definition: "=[PreferredEmail]", cubeRole: "measure", suppressNull: false, showFilter: false },
+      { name: "Website", definition: "=if(org_active='True'\r\n\t,if(isnull(Website),'no website provided',Website))", cubeRole: "measure", suppressNull: false, showFilter: false },
+      { name: "Age Groups", definition: `=If(count({<dem_age-={'tba'}>} distinct dem_age) > 0,\r\n   concat({<dem_age-={'tba'}>} distinct dem_age,'${FIELD_VALUE_DELIMITER}', dem_age_sort), 'tba')`, cubeRole: "measure", suppressNull: true, showFilter: true },
+      { name: "Genders", definition: `=If(count({<dem_sex-={'tba'}>} distinct dem_sex) > 0,\r\n   concat({<dem_sex-={'tba'}>} distinct dem_sex,'${FIELD_VALUE_DELIMITER}', dem_sex), 'tba')`, cubeRole: "measure", suppressNull: true, showFilter: true },
+      { name: "State", definition: "=concat(distinct State,', ')", cubeRole: "measure", suppressNull: true, showFilter: false },
+      { name: "Primary Services", definition: `=concat(distinct [Primary Service],'${FIELD_VALUE_DELIMITER}', primary_service_sort)`, cubeRole: "measure", suppressNull: true, showFilter: true },
+      { name: "Secondary Services", definition: `=concat(distinct aggr(distinct concat(distinct program_sub,'${FIELD_VALUE_DELIMITER}'), Organization, [Primary Service]), '${FIELD_VALUE_DELIMITER}', primary_service_sort)`, cubeRole: "measure", suppressNull: true, showFilter: true },
+      { name: "Nationalities", definition: `=If(count({<Nationalities-={'tba'}>} distinct Nationalities) > 0, concat({<Nationalities-={'tba'}>} distinct Nationalities, '${FIELD_VALUE_DELIMITER}', Nationalities), 'tba')`, cubeRole: "measure", suppressNull: false, showFilter: true }
+    ];
+
+    let organizations = [];
+    let qlikLoadError = "";
+
+    const filterConfig = [
+      { key: "counties", label: "Location", searchPlaceholder: "Search counties" },
+      { key: "mainServices", label: "Main Services" },
+      { key: "additionalServices", label: "Additional Services" },
+      { key: "populations", label: "Who They Serve" },
+      { key: "organizationType", label: "Organization Type" }
+    ];
+
+    const quickNeeds = [
+      { label: "Emergency help", filters: { additionalServices: ["Temporary Shelter", "Intervention"] }, featured: true },
+      { label: "Legal support", filters: { additionalServices: ["Legal", "Victim Advocates"] } },
+      { label: "Shelter or housing", filters: { additionalServices: ["Temporary Shelter"] } },
+      { label: "Counseling", filters: { additionalServices: ["Counseling", "Aftercare"] } },
+      { label: "Prevention training", filters: { mainServices: ["Prevention"], additionalServices: ["Training"] } },
+      { label: "Organizations near me", action: "nearby" }
+    ];
+
+    const zipToCounty = {
+      "37013": "Davidson", "37027": "Williamson", "37040": "Montgomery", "37042": "Montgomery",
+      "37064": "Williamson", "37122": "Wilson", "37129": "Rutherford", "37130": "Rutherford",
+      "37201": "Davidson", "37203": "Davidson", "37206": "Davidson", "37209": "Davidson",
+      "37211": "Davidson", "37214": "Davidson", "37221": "Davidson", "37402": "Hamilton",
+      "37405": "Hamilton", "37902": "Knox", "37917": "Knox", "38103": "Shelby",
+      "38104": "Shelby", "38116": "Shelby"
+    };
+
+    const countyCenters = {
+      Anderson: [36.10, -84.20], Bedford: [35.51, -86.45], Benton: [36.07, -88.07],
+      Bledsoe: [35.61, -85.19], Blount: [35.69, -83.92], Bradley: [35.16, -84.86],
+      Campbell: [36.40, -84.15], Cannon: [35.81, -86.06], Carroll: [35.99, -88.45],
+      Carter: [36.29, -82.13], Cheatham: [36.26, -87.09], Chester: [35.43, -88.64],
+      Claiborne: [36.48, -83.66], Clay: [36.55, -85.54], Cocke: [35.94, -83.12],
+      Coffee: [35.49, -86.08], Crockett: [35.81, -89.14], Cumberland: [35.95, -85.03],
+      Davidson: [36.16, -86.78], Decatur: [35.60, -88.11], Dekalb: [35.98, -85.83],
+      Dickson: [36.08, -87.38], Dyer: [36.06, -89.41], Fayette: [35.20, -89.41],
+      Fentress: [36.38, -84.94], Franklin: [35.16, -86.10], Gibson: [35.99, -88.93],
+      Giles: [35.20, -87.03], Grainger: [36.28, -83.51], Greene: [36.17, -82.85],
+      Grundy: [35.39, -85.72], Hamblen: [36.22, -83.27], Hamilton: [35.18, -85.16],
+      Hancock: [36.53, -83.22], Hardeman: [35.21, -88.99], Hardin: [35.20, -88.19],
+      Hawkins: [36.44, -82.95], Haywood: [35.59, -89.28], Henderson: [35.65, -88.39],
+      Henry: [36.34, -88.30], Hickman: [35.80, -87.47], Houston: [36.29, -87.71],
+      Humphreys: [36.04, -87.78], Jackson: [36.36, -85.67], Jefferson: [36.05, -83.45],
+      Johnson: [36.45, -81.85], Knox: [35.99, -83.94], Lake: [36.34, -89.49],
+      Lauderdale: [35.76, -89.63], Lawrence: [35.24, -87.33], Lewis: [35.53, -87.49],
+      Lincoln: [35.14, -86.59], Loudon: [35.73, -84.31], Macon: [36.54, -86.00],
+      Madison: [35.61, -88.84], Marion: [35.13, -85.62], Marshall: [35.47, -86.76],
+      Maury: [35.62, -87.08], Mcminn: [35.43, -84.62], Mcnairy: [35.18, -88.56],
+      Meigs: [35.52, -84.79], Monroe: [35.45, -84.25], Montgomery: [36.50, -87.38],
+      Moore: [35.28, -86.36], Morgan: [36.14, -84.63], Obion: [36.36, -89.15],
+      Overton: [36.34, -85.28], Perry: [35.65, -87.86], Pickett: [36.56, -85.08],
+      Polk: [35.14, -84.52], Putnam: [36.13, -85.50], Rhea: [35.60, -84.92],
+      Roane: [35.85, -84.52], Robertson: [36.53, -86.87], Rutherford: [35.84, -86.42],
+      Scott: [36.43, -84.50], Sequatchie: [35.37, -85.41], Sevier: [35.78, -83.52],
+      Shelby: [35.18, -89.89], Smith: [36.25, -85.95], Stewart: [36.50, -87.84],
+      Sullivan: [36.52, -82.30], Sumner: [36.47, -86.46], Tipton: [35.50, -89.76],
+      Trousdale: [36.39, -86.16], Unicoi: [36.13, -82.43], Union: [36.29, -83.84],
+      "Van Buren": [35.70, -85.45], Warren: [35.68, -85.78], Washington: [36.30, -82.50],
+      Wayne: [35.24, -87.79], Weakley: [36.28, -88.72], White: [35.93, -85.46],
+      Williamson: [35.89, -86.90], Wilson: [36.16, -86.30]
+    };
+
+    const state = {
+      search: "",
+      view: "cards",
+      filtersOpen: false,
+      activeQuickNeed: "",
+      isLoading: true,
+      userLocation: null,
+      printMode: "results",
+      visibleCount: 60,
+      filters: {
+        counties: new Set(),
+        mainServices: new Set(),
+        additionalServices: new Set(),
+        populations: new Set(),
+        organizationType: new Set()
+      },
+      countySearch: ""
+    };
+
+    const els = {
+      searchInput: document.getElementById("searchInput"),
+      searchButton: document.getElementById("searchButton"),
+      toggleFilters: document.getElementById("toggleFilters"),
+      filtersPanel: document.getElementById("filtersPanel"),
+      filterGroups: document.getElementById("filterGroups"),
+      needButtons: document.getElementById("needButtons"),
+      emergencyResource: document.getElementById("emergencyResource"),
+      resultCount: document.getElementById("resultCount"),
+      resultSubtext: document.getElementById("resultSubtext"),
+      activeFilters: document.getElementById("activeFilters"),
+      resultsGrid: document.getElementById("resultsGrid"),
+      mapPanel: document.getElementById("mapPanel"),
+      emptyState: document.getElementById("emptyState"),
+      loadingState: document.getElementById("loadingState"),
+      errorState: document.getElementById("errorState"),
+      clearFiltersTop: document.getElementById("clearFiltersTop"),
+      clearFiltersEmpty: document.getElementById("clearFiltersEmpty"),
+      paginationActions: document.getElementById("paginationActions"),
+      loadMoreResults: document.getElementById("loadMoreResults"),
+      printResults: document.getElementById("printResults"),
+      printMapOnly: document.getElementById("printMapOnly"),
+      printMapList: document.getElementById("printMapList"),
+      printView: document.getElementById("printView"),
+      nearbyModal: document.getElementById("nearbyModal"),
+      closeNearby: document.getElementById("closeNearby"),
+      useLocation: document.getElementById("useLocation"),
+      locationStatus: document.getElementById("locationStatus"),
+      nearbyText: document.getElementById("nearbyText"),
+      applyNearbyText: document.getElementById("applyNearbyText"),
+      nearbyCountySelect: document.getElementById("nearbyCountySelect"),
+      applyNearbyCounty: document.getElementById("applyNearbyCounty")
+    };
+
+    let directoryMap = null;
+    let directoryMarkers = null;
+    let countyBoundaryLayer = null;
+    let countyBoundaryCache = null;
+    let countyBoundaryHitLayer = null;
+
+    function asArray(value) {
+      if (Array.isArray(value)) return value.filter((item) => item && item !== NULL_REPLACEMENT);
+      return value && value !== NULL_REPLACEMENT ? [value] : [];
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    const fallbackEmergencyHelp = {
+      heading: "Emergency help resources",
+      intro: "If anyone is in immediate danger, always call 911 first.",
+      sections: [
+        {
+          title: "Non-state-specific 911 information",
+          description: "For immediate danger or an urgent medical, fire, or police emergency, call 911.",
+          items: [
+            { label: "Phone", text: "911", href: "tel:911" }
+          ]
+        },
+        {
+          title: "National Human Trafficking Hotline",
+          description: "This provides nationwide support and can connect victims with local services.",
+          items: [
+            { label: "Phone", text: "1-888-373-7888", href: "tel:18883737888" },
+            { label: "Text", text: "Text \"HELP\" or \"INFO\" to 233733 (BEFREE)" },
+            { label: "Live Chat", text: "humantraffickinghotline.org", href: "https://humantraffickinghotline.org" }
+          ]
+        }
+      ]
+    };
+
+    function renderEmergencyHelpContent(resource = fallbackEmergencyHelp) {
+      const sections = Array.isArray(resource.sections) ? resource.sections : fallbackEmergencyHelp.sections;
+      els.emergencyResource.innerHTML = `
+        <h2>${escapeHtml(resource.heading || fallbackEmergencyHelp.heading)}</h2>
+        <p><span class="emergency-alert">${escapeHtml(resource.intro || fallbackEmergencyHelp.intro)}</span></p>
+        ${sections.map((section) => `
+          <h3>${escapeHtml(section.title || "")}</h3>
+          ${section.description ? `<p>${escapeHtml(section.description)}</p>` : ""}
+          ${(Array.isArray(section.items) ? section.items : []).map((item) => {
+            const text = escapeHtml(item.text || "");
+            const value = item.href
+              ? `<a href="${escapeHtml(item.href)}" ${String(item.href).startsWith("http") ? `target="_blank" rel="noopener"` : ""}>${text}</a>`
+              : text;
+            return `<p><strong>${escapeHtml(item.label || "Resource")}:</strong> ${value}</p>`;
+          }).join("")}
+        `).join("")}
+      `;
+    }
+
+    async function loadEmergencyHelpContent() {
+      renderEmergencyHelpContent();
+
+      try {
+        const response = await fetch(EMERGENCY_HELP_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Unable to load ${EMERGENCY_HELP_URL}`);
+
+        const config = await response.json();
+        const matchingResource = config.resources?.[QLIK_APP_ID] || config[QLIK_APP_ID] || config.default;
+        renderEmergencyHelpContent(matchingResource || fallbackEmergencyHelp);
+      } catch (error) {
+        console.warn("Using fallback emergency help content.", error);
+      }
+    }
+
+    function getOptions(key) {
+      return [...new Set(organizations.flatMap((org) => asArray(org[key])))].sort((a, b) => a.localeCompare(b));
+    }
+
+    function resetVisibleResults() {
+      state.visibleCount = 60;
+    }
+
+    function openNearbyModal() {
+      renderNearbyCountyOptions();
+      els.nearbyModal.classList.add("active");
+    }
+
+    function closeNearbyModal() {
+      els.nearbyModal.classList.remove("active");
+    }
+
+    function applyCountyFilter(county) {
+      if (!county) return;
+      Object.values(state.filters).forEach((set) => set.clear());
+      state.filters.counties.add(county);
+      state.activeQuickNeed = "Organizations near me";
+      resetVisibleResults();
+      closeNearbyModal();
+      render();
+    }
+
+    function normalizeCountyInput(value) {
+      const cleanValue = value.trim();
+      if (!cleanValue) return "";
+      if (zipToCounty[cleanValue]) return zipToCounty[cleanValue];
+      const counties = getOptions("counties");
+      return counties.find((county) => county.toLowerCase() === cleanValue.toLowerCase())
+        || counties.find((county) => county.toLowerCase().startsWith(cleanValue.toLowerCase()))
+        || "";
+    }
+
+    function nearestCounty(latitude, longitude) {
+      const availableCounties = new Set(getOptions("counties"));
+      let bestCounty = "";
+      let bestDistance = Infinity;
+      Object.entries(countyCenters).forEach(([county, center]) => {
+        if (!availableCounties.has(county)) return;
+        const distance = Math.hypot(latitude - center[0], longitude - center[1]);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestCounty = county;
+        }
+      });
+      return bestCounty;
+    }
+
+    function milesBetween(lat1, lon1, lat2, lon2) {
+      const earthRadiusMiles = 3958.8;
+      const toRadians = (degrees) => degrees * Math.PI / 180;
+      const dLat = toRadians(lat2 - lat1);
+      const dLon = toRadians(lon2 - lon1);
+      const a = Math.sin(dLat / 2) ** 2
+        + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) ** 2;
+      return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function nearestServedCountyDistance(org) {
+      if (!state.userLocation) return null;
+      const distances = asArray(org.counties)
+        .map((county) => {
+          const center = countyCenters[county];
+          if (!center) return null;
+          return {
+            county,
+            miles: milesBetween(state.userLocation.latitude, state.userLocation.longitude, center[0], center[1])
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.miles - b.miles);
+      return distances[0] || null;
+    }
+
+    const geocodeCacheKey = "directoryQlikPrototypeGeocodeCache";
+    const geocodeCache = JSON.parse(localStorage.getItem(geocodeCacheKey) || "{}");
+    const geocodingInProgress = new Set();
+    const scheduledGeocodes = new Set();
+
+    function saveGeocodeCache() {
+      localStorage.setItem(geocodeCacheKey, JSON.stringify(geocodeCache));
+    }
+
+    function addressCacheKey(address) {
+      return String(address || "").trim().toLowerCase();
+    }
+
+    function applyCachedGeocode(org) {
+      if (!org.address) return;
+      const cached = geocodeCache[addressCacheKey(org.address)];
+      if (cached) org.geo = cached;
+    }
+
+    async function geocodeAddress(org) {
+      if (!org.address || org.geo) return;
+      const key = addressCacheKey(org.address);
+      if (!key || geocodingInProgress.has(key)) return;
+      if (Object.prototype.hasOwnProperty.call(geocodeCache, key)) {
+        org.geo = geocodeCache[key];
+        return;
+      }
+
+      geocodingInProgress.add(key);
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=${encodeURIComponent(org.address)}`);
+        if (!response.ok) {
+          geocodeCache[key] = null;
+          saveGeocodeCache();
+          return;
+        }
+        const matches = await response.json();
+        if (!matches.length) {
+          geocodeCache[key] = null;
+          saveGeocodeCache();
+          return;
+        }
+        const geo = {
+          latitude: Number(matches[0].lat),
+          longitude: Number(matches[0].lon),
+          source: "address"
+        };
+        if (Number.isFinite(geo.latitude) && Number.isFinite(geo.longitude)) {
+          org.geo = geo;
+          geocodeCache[key] = geo;
+          saveGeocodeCache();
+        }
+      } finally {
+        geocodingInProgress.delete(key);
+      }
+    }
+
+    function distanceForOrg(org) {
+      if (!state.userLocation) return null;
+      if (org.geo) {
+        return {
+          miles: milesBetween(state.userLocation.latitude, state.userLocation.longitude, org.geo.latitude, org.geo.longitude),
+          target: "address",
+          basis: "based on the organization address"
+        };
+      }
+      const countyDistance = nearestServedCountyDistance(org);
+      if (!countyDistance) return null;
+      return {
+        miles: countyDistance.miles,
+        target: countyDistance.county,
+        basis: "based on the nearest served county center"
+      };
+    }
+
+    function queueAddressDistanceLookups(results) {
+      if (!state.userLocation) return;
+      results.slice(0, 24).forEach((org, index) => {
+        applyCachedGeocode(org);
+        if (org.geo || !org.address) return;
+        const key = addressCacheKey(org.address);
+        if (scheduledGeocodes.has(key) || geocodingInProgress.has(key)) return;
+        scheduledGeocodes.add(key);
+        window.setTimeout(() => {
+          geocodeAddress(org).then(() => updateOrgDistance(org)).finally(() => scheduledGeocodes.delete(key));
+        }, index * 350);
+      });
+    }
+
+    function updateOrgDistance(org) {
+      const distance = distanceForOrg(org);
+      if (!distance) return;
+      const label = `${Math.max(1, Math.round(distance.miles))} mi to ${distance.target}`;
+      document.querySelectorAll(`[data-distance-for="${org.id}"]`).forEach((node) => {
+        node.textContent = label;
+        node.classList.remove("hidden");
+      });
+      document.querySelectorAll(`[data-distance-detail-for="${org.id}"]`).forEach((node) => {
+        node.textContent = `Approx. distance: ${label} ${distance.basis}`;
+        node.classList.remove("hidden");
+      });
+    }
+
+    function renderNearbyCountyOptions() {
+      const counties = getOptions("counties");
+      els.nearbyCountySelect.innerHTML = counties.map((county) => `<option value="${escapeHtml(county)}">${escapeHtml(county)}</option>`).join("");
+    }
+
+    function splitValues(value) {
+      if (value === null || value === undefined || value === NULL_REPLACEMENT) return [];
+      return String(value)
+        .split(FIELD_VALUE_DELIMITER)
+        .map((item) => item.trim())
+        .filter((item) => item && item !== NULL_REPLACEMENT && !VALUE_NULL_STRINGS.includes(item.toLowerCase()));
+    }
+
+    function firstValue(row, fieldName) {
+      const values = splitValues(row[fieldName]);
+      return values[0] || "";
+    }
+
+    function normalizeWebsite(value) {
+      const website = firstValue(value, "Website");
+      if (!website || website.toLowerCase() === "no website provided") return "";
+      if (/^https?:\/\//i.test(website)) return website;
+      return `https://${website}`;
+    }
+
+    function rowToOrganization(row) {
+      const contactName = firstValue(row, "Contact Name");
+      const phone = firstValue(row, "Contact Phone");
+      const email = firstValue(row, "Contact Email");
+      const address = firstValue(row, "Address");
+      const stateValue = firstValue(row, "State");
+      const populations = [
+        ...splitValues(row["Age Groups"]),
+        ...splitValues(row["Genders"]),
+        ...splitValues(row["Nationalities"])
+      ];
+
+      return {
+        id: "",
+        name: firstValue(row, "Org Name") || "Unnamed Organization",
+        website: normalizeWebsite(row),
+        counties: splitValues(row["County"]),
+        mainServices: splitValues(row["Primary Services"]),
+        additionalServices: splitValues(row["Secondary Services"]),
+        populations: [...new Set(populations)],
+        organizationType: firstValue(row, "Sector") || "Other",
+        contact: contactName || "Not listed",
+        phone,
+        email,
+        address,
+        geo: null,
+        stateValue,
+        description: firstValue(row, "Mission Statement") || "No mission statement provided.",
+        details: [address, stateValue].filter(Boolean).join(", ")
+      };
+    }
+
+    function createCubeDef(definition) {
+      return {
+        qDimensions: definition
+          .filter((def) => def.cubeRole === "dimension")
+          .map((def) => ({
+            qNullSuppression: def.suppressNull,
+            qDef: { qFieldLabels: [def.name], qFieldDefs: [def.definition] }
+          })),
+        qMeasures: definition
+          .filter((def) => def.cubeRole === "measure")
+          .map((def) => ({
+            qNullSuppression: def.suppressNull,
+            qDef: { qFieldLabels: [def.name], qDef: def.definition }
+          }))
+      };
+    }
+
+    function parseQlikCell(cell) {
+      if (!cell || cell.qText === null || VALUE_NULL_STRINGS.includes(String(cell.qText).toLowerCase())) {
+        return NULL_REPLACEMENT;
+      }
+      if (typeof cell.qNum === "number" && !Number.isNaN(cell.qNum)) {
+        return cell.qNum;
+      }
+      return cell.qText;
+    }
+
+    function semanticRows(columns, tableData) {
+      return tableData.map((row) => {
+        const rowValue = {};
+        row.forEach((cell, index) => {
+          rowValue[columns[index].name] = cell;
+        });
+        return rowValue;
+      });
+    }
+
+    async function waitForQlikEmbed(embedEl) {
+      for (let i = 0; i < 40; i++) {
+        if (typeof embedEl.getRefApi === "function") return embedEl.getRefApi();
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      throw new Error("Qlik embed did not become ready.");
+    }
+
+    async function loadQlikOrganizations() {
+      try {
+        const container = document.getElementById("qlikEmbedContainer");
+        const embedEl = document.createElement("qlik-embed");
+        embedEl.id = "qlikEmbed";
+        embedEl.setAttribute("ui", "analytics/selections");
+        embedEl.setAttribute("app-id", QLIK_APP_ID);
+        embedEl.setAttribute("sheet-id", QLIK_SHEET_ID);
+        container.appendChild(embedEl);
+
+        const refApi = await waitForQlikEmbed(embedEl);
+        const doc = await refApi.getDoc();
+        const tableDefinition = {
+          qInfo: { qType: "sn-table" },
+          qHyperCubeDef: createCubeDef(tableFields)
+        };
+        const table = await doc.createSessionObject(tableDefinition);
+        const tableProperties = await table.getProperties();
+        const tableLayout = await table.getLayout();
+        const tablePageHeight = Math.floor(9999 / tableFields.length);
+        const pagesToGet = Math.ceil(tableLayout.qHyperCube.qSize.qcy / tablePageHeight);
+        const pages = await Promise.all(Array(pagesToGet).fill(0).map((_, index) => {
+          return table.getHyperCubeData("/qHyperCubeDef", [{
+            qLeft: 0,
+            qTop: index * tablePageHeight,
+            qWidth: tableFields.length,
+            qHeight: tablePageHeight
+          }]);
+        }));
+
+        const tableData = pages.flatMap((data) => data[0].qMatrix).map((row) => row.map(parseQlikCell));
+        const columns = [
+          ...tableProperties.qHyperCubeDef.qDimensions,
+          ...tableProperties.qHyperCubeDef.qMeasures
+        ].map((column) => ({ name: column.qDef.qLabel || column.qDef.qFieldLabels[0] }));
+
+        organizations = semanticRows(columns, tableData)
+          .map(rowToOrganization)
+          .filter((org) => org.name && org.name !== "Unnamed Organization")
+          .sort((a, b) => a.name.localeCompare(b.name));
+        organizations.forEach((org, index) => {
+          org.id = `org-${index}`;
+          org.searchText = buildSearchText(org);
+          applyCachedGeocode(org);
+        });
+      } catch (error) {
+        qlikLoadError = error.message || "Unable to load Qlik data.";
+      } finally {
+        state.isLoading = false;
+        render();
+      }
+    }
+
+    function toggleFilter(key, value) {
+      const set = state.filters[key];
+      if (set.has(value)) return;
+      set.add(value);
+      state.activeQuickNeed = "";
+      resetVisibleResults();
+      render();
+    }
+
+    function clearFilters() {
+      Object.values(state.filters).forEach((set) => set.clear());
+      state.search = "";
+      state.countySearch = "";
+      state.activeQuickNeed = "";
+      resetVisibleResults();
+      els.searchInput.value = "";
+      render();
+    }
+
+    function applyQuickNeed(need) {
+      Object.values(state.filters).forEach((set) => set.clear());
+      Object.entries(need.filters).forEach(([key, values]) => {
+        values.forEach((value) => state.filters[key].add(value));
+      });
+      state.activeQuickNeed = need.label;
+      resetVisibleResults();
+      render();
+    }
+
+    function orgMatchesFilters(org) {
+      return Object.entries(state.filters).every(([key, selected]) => {
+        if (selected.size === 0) return true;
+        const values = asArray(org[key]);
+        return [...selected].some((value) => values.includes(value));
+      });
+    }
+
+    function orgMatchesSearch(org) {
+      if (!state.search.trim()) return true;
+      return org.searchText.includes(state.search.trim().toLowerCase());
+    }
+
+    function buildSearchText(org) {
+      return [
+        org.name,
+        org.contact,
+        org.description,
+        org.details,
+        org.organizationType,
+        org.address,
+        org.stateValue,
+        ...org.counties,
+        ...org.mainServices,
+        ...org.additionalServices,
+        ...org.populations
+      ].join(" ").toLowerCase();
+    }
+
+    function getFilteredOrganizations() {
+      return organizations.filter((org) => orgMatchesFilters(org) && orgMatchesSearch(org));
+    }
+
+    function summarizeList(values, maxVisible = 4, emptyText = "Not listed") {
+      const cleanValues = asArray(values);
+      if (cleanValues.length === 0) return emptyText;
+      if (cleanValues.length <= maxVisible) return cleanValues.join(", ");
+      return `${cleanValues.slice(0, maxVisible).join(", ")} + ${cleanValues.length - maxVisible} more`;
+    }
+
+    function renderQuickNeeds() {
+      els.needButtons.innerHTML = quickNeeds.map((need) => `
+        <button class="need ${need.featured ? "featured" : ""} ${state.activeQuickNeed === need.label ? "active" : ""}" data-need="${need.label}">
+          ${need.label}
+        </button>
+      `).join("");
+
+      els.emergencyResource.classList.toggle("active", state.activeQuickNeed === "Emergency help");
+
+      els.needButtons.querySelectorAll("[data-need]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const need = quickNeeds.find((item) => item.label === button.dataset.need);
+          if (need.action === "nearby") {
+            openNearbyModal();
+          } else {
+            applyQuickNeed(need);
+          }
+        });
+      });
+    }
+
+    function renderFilters() {
+      els.filtersPanel.classList.toggle("collapsed", !state.filtersOpen);
+      els.filtersPanel.parentElement.classList.toggle("filters-hidden", !state.filtersOpen);
+      els.toggleFilters.textContent = state.filtersOpen ? "Hide Filters" : "Open Filters";
+
+      els.filterGroups.innerHTML = filterConfig.map((group) => {
+        const isCountyGroup = group.key === "counties";
+        const options = getOptions(group.key).filter((option) => {
+          if (!isCountyGroup || !state.countySearch) return true;
+          return option.toLowerCase().includes(state.countySearch.toLowerCase());
+        });
+        const search = group.searchPlaceholder
+          ? `<input class="filter-search" id="countySearch" placeholder="${group.searchPlaceholder}" value="${state.countySearch}">`
+          : "";
+        const hint = isCountyGroup
+          ? `<p class="filter-hint">${options.length} counties shown. Use search to narrow this list.</p>`
+          : "";
+
+        return `
+          <div class="filter-group">
+            <p class="filter-title">${group.label}</p>
+            ${search}
+            ${hint}
+            <div class="chip-row ${isCountyGroup ? "scroll-list" : ""}">
+              ${options.map((option) => `
+                <button class="chip ${state.filters[group.key].has(option) ? "selected" : ""}"
+                  aria-pressed="${state.filters[group.key].has(option)}"
+                  data-filter-key="${group.key}"
+                  data-filter-value="${escapeHtml(option)}">
+                  ${escapeHtml(option)}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const countySearch = document.getElementById("countySearch");
+      if (countySearch) {
+        countySearch.addEventListener("input", (event) => {
+          state.countySearch = event.target.value;
+          renderFilters();
+        });
+      }
+
+      els.filterGroups.querySelectorAll("[data-filter-key]").forEach((button) => {
+        button.addEventListener("click", () => toggleFilter(button.dataset.filterKey, button.dataset.filterValue));
+      });
+    }
+
+    function renderActiveFilters() {
+      const chips = [];
+      Object.entries(state.filters).forEach(([key, values]) => {
+        values.forEach((value) => chips.push({ key, value }));
+      });
+
+      if (state.search.trim()) {
+        chips.unshift({ key: "search", value: `Search: ${state.search.trim()}` });
+      }
+
+      els.activeFilters.innerHTML = chips.map((chip) => `
+        <button class="active-chip" data-active-key="${chip.key}" data-active-value="${escapeHtml(chip.value)}">
+          ${escapeHtml(chip.value)} x
+        </button>
+      `).join("");
+
+      els.activeFilters.querySelectorAll("[data-active-key]").forEach((button) => {
+        button.addEventListener("click", () => {
+          if (button.dataset.activeKey === "search") {
+            state.search = "";
+            els.searchInput.value = "";
+          } else {
+            state.filters[button.dataset.activeKey].delete(button.dataset.activeValue);
+          }
+          state.activeQuickNeed = "";
+          resetVisibleResults();
+          render();
+        });
+      });
+    }
+
+    function renderCards(results) {
+      els.resultsGrid.innerHTML = results.map((org, index) => {
+        const countySummary = summarizeList(org.counties, 4, "County not listed");
+        const allCounties = summarizeList(org.counties, 999, "County not listed");
+        applyCachedGeocode(org);
+        const distance = distanceForOrg(org);
+        const distanceLabel = distance
+          ? `${Math.max(1, Math.round(distance.miles))} mi to ${distance.target}`
+          : "";
+        return `
+        <article class="org-card">
+          <div class="card-top">
+            <h3>${escapeHtml(org.name)}</h3>
+            ${org.website ? `<a class="website-link" href="${escapeHtml(org.website)}" target="_blank" rel="noreferrer">Website -></a>` : `<span class="website-link">No website</span>`}
+          </div>
+          <div class="card-body">
+            <div class="meta">
+              <span class="county-summary"><strong>Serves:</strong> ${escapeHtml(countySummary)}</span>
+              <span class="distance-pill ${distanceLabel ? "" : "hidden"}" data-distance-for="${escapeHtml(org.id)}">${escapeHtml(distanceLabel)}</span>
+              <span><strong>Contact person:</strong> ${escapeHtml(org.contact || "Not listed")}</span>
+              <span><strong>Phone:</strong> ${escapeHtml(org.phone || "Not listed")}</span>
+              <span><strong>Type:</strong> ${escapeHtml(org.organizationType)}</span>
+            </div>
+            <div class="service-list">
+              ${org.mainServices.map((service) => `<button class="service-tag main" data-tag-key="mainServices" data-tag-value="${escapeHtml(service)}">${escapeHtml(service)}</button>`).join("")}
+              ${org.additionalServices.slice(0, 3).map((service) => `<button class="service-tag" data-tag-key="additionalServices" data-tag-value="${escapeHtml(service)}">${escapeHtml(service)}</button>`).join("")}
+            </div>
+            <p class="description">${escapeHtml(org.description)}</p>
+            <div class="details-panel" id="details-${index}">
+              <strong>Counties served:</strong> ${escapeHtml(allCounties)}<br>
+              <span class="${distanceLabel ? "" : "hidden"}" data-distance-detail-for="${escapeHtml(org.id)}">${distanceLabel ? `Approx. distance: ${escapeHtml(distanceLabel)} ${escapeHtml(distance.basis)}` : ""}</span>${distanceLabel ? "<br>" : ""}
+              <strong>Address:</strong> ${escapeHtml(org.address || org.details || "No address listed.")}<br>
+              <strong>Who they serve:</strong> ${escapeHtml(org.populations.join(", ") || "Not listed")}
+            </div>
+            <div class="card-actions">
+              <button class="button primary" data-call="${escapeHtml(org.phone)}" ${org.phone ? "" : "disabled"}>Call</button>
+              <button class="button" data-email="${escapeHtml(org.email)}" ${org.email ? "" : "disabled"}>Email</button>
+              <button class="button details" data-details="details-${index}">View Details</button>
+            </div>
+          </div>
+        </article>
+      `;
+      }).join("");
+
+      els.resultsGrid.classList.toggle("list-view", state.view === "list");
+
+      els.resultsGrid.querySelectorAll("[data-tag-key]").forEach((button) => {
+        button.addEventListener("click", () => toggleFilter(button.dataset.tagKey, button.dataset.tagValue));
+      });
+
+      els.resultsGrid.querySelectorAll("[data-details]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const panel = document.getElementById(button.dataset.details);
+          panel.classList.toggle("open");
+          button.textContent = panel.classList.contains("open") ? "Hide Details" : "View Details";
+        });
+      });
+
+      els.resultsGrid.querySelectorAll("[data-call]").forEach((button) => {
+        button.addEventListener("click", () => {
+          window.location.href = `tel:${button.dataset.call}`;
+        });
+      });
+
+      els.resultsGrid.querySelectorAll("[data-email]").forEach((button) => {
+        button.addEventListener("click", () => {
+          window.location.href = `mailto:${button.dataset.email}`;
+        });
+      });
+    }
+
+    function fallbackMap(results) {
+      const positions = [
+        [8, 14], [54, 18], [30, 38], [68, 48], [16, 68], [48, 72], [78, 76], [38, 12]
+      ];
+      els.mapPanel.innerHTML = `<div class="map-fallback">${
+        results.slice(0, 8).map((org, index) => {
+        const [left, top] = positions[index];
+        return `<div class="map-pin" style="left:${left}%;top:${top}%">${escapeHtml(org.counties[0] || "Location")}<br>${escapeHtml(org.name)}</div>`;
+      }).join("")
+      }</div><div class="map-notice">Map tiles could not load, so this fallback shows a simplified location preview.</div>`;
+    }
+
+    function mapLocationForOrg(org, index) {
+      if (org.geo) {
+        return {
+          lat: org.geo.latitude,
+          lng: org.geo.longitude,
+          label: "Organization address",
+          basis: org.address || "Address"
+        };
+      }
+      const county = asArray(org.counties).find((item) => countyCenters[item]);
+      if (!county) return null;
+      const [lat, lng] = countyCenters[county];
+      const angle = (index % 24) * (Math.PI * 2 / 24);
+      const distance = 0.025 + ((index % 5) * 0.006);
+      return {
+        lat: lat + Math.sin(angle) * distance,
+        lng: lng + Math.cos(angle) * distance,
+        label: county,
+        basis: "Served county center"
+      };
+    }
+
+    function selectedMapCounties(results) {
+      if (state.filters.counties.size > 0) return [...state.filters.counties];
+      return [];
+    }
+
+    function countyBounds(county) {
+      const center = countyCenters[county];
+      if (!center) return null;
+      const [lat, lng] = center;
+      return [[lat - 0.18, lng - 0.24], [lat + 0.18, lng + 0.24]];
+    }
+
+    function renderApproxCountyBorders(counties) {
+      countyBoundaryLayer = L.layerGroup().addTo(directoryMap);
+      countyBoundaryHitLayer = L.layerGroup().addTo(directoryMap);
+      counties.forEach((county) => {
+        const bounds = countyBounds(county);
+        if (!bounds) return;
+        L.rectangle(bounds, {
+          color: "#7c2dff",
+          weight: 3,
+          fillColor: "#7c2dff",
+          fillOpacity: 0.08,
+          interactive: false
+        }).addTo(countyBoundaryLayer);
+        L.rectangle(bounds, {
+          color: "#7c2dff",
+          weight: 12,
+          fill: false,
+          opacity: 0,
+          interactive: true
+        })
+          .bindTooltip(`${escapeHtml(county)} County`, {
+            direction: "center",
+            sticky: true,
+            opacity: 1
+          })
+          .addTo(countyBoundaryLayer);
+      });
+      bringOrgMarkersToFront();
+    }
+
+    async function renderCountyBorders(counties) {
+      if (!directoryMap || !counties.length) return;
+      if (countyBoundaryLayer) {
+        countyBoundaryLayer.remove();
+        countyBoundaryLayer = null;
+      }
+      if (countyBoundaryHitLayer) {
+        countyBoundaryHitLayer.remove();
+        countyBoundaryHitLayer = null;
+      }
+      try {
+        if (!countyBoundaryCache) {
+          const response = await fetch("https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json");
+          if (!response.ok) throw new Error("County border data unavailable");
+          countyBoundaryCache = await response.json();
+        }
+        const selected = new Set(counties.map((county) => county.toLowerCase()));
+        const features = countyBoundaryCache.features.filter((feature) => {
+          const id = String(feature.id || "");
+          const name = String(feature.properties?.NAME || feature.properties?.name || "").toLowerCase();
+          return id.startsWith("47") && selected.has(name);
+        });
+        if (!features.length) {
+          renderApproxCountyBorders(counties);
+          return;
+        }
+        countyBoundaryLayer = L.geoJSON(features, {
+          style: {
+            color: "#7c2dff",
+            weight: 3,
+            fillColor: "#7c2dff",
+            fillOpacity: 0.08
+          },
+          interactive: false
+        }).addTo(directoryMap);
+        countyBoundaryHitLayer = L.geoJSON(features, {
+          style: {
+            color: "#7c2dff",
+            weight: 14,
+            opacity: 0,
+            fill: false,
+            fillOpacity: 0
+          },
+          interactive: true,
+          onEachFeature: (feature, layer) => {
+            const countyName = feature.properties?.NAME || feature.properties?.name || "Selected";
+            layer.bindTooltip(`${escapeHtml(countyName)} County`, {
+              direction: "center",
+              sticky: true,
+              opacity: 1
+            });
+          }
+        }).addTo(directoryMap);
+        bringOrgMarkersToFront();
+      } catch (error) {
+        renderApproxCountyBorders(counties);
+      }
+    }
+
+    function bringOrgMarkersToFront() {
+      if (!directoryMarkers) return;
+      directoryMarkers.eachLayer((layer) => {
+        if (typeof layer.bringToFront === "function") layer.bringToFront();
+        if (typeof layer.setZIndexOffset === "function") layer.setZIndexOffset(1000);
+      });
+    }
+
+    function printableMapData(results) {
+      return results
+        .map((org, index) => ({ number: index + 1, org, location: mapLocationForOrg(org, index) }))
+        .filter((item) => item.location)
+        .slice(0, 250);
+    }
+
+    function projectPrintPoint(location, bounds, width, height) {
+      if (bounds.scale && bounds.originPixelX !== undefined && bounds.originPixelY !== undefined) {
+        const world = projectTilePixel(location.lat, location.lng, bounds.zoom);
+        return {
+          x: Math.min(width - 14, Math.max(14, (world.x - bounds.originPixelX) * bounds.scale)),
+          y: Math.min(height - 14, Math.max(14, (world.y - bounds.originPixelY) * bounds.scale))
+        };
+      }
+      const x = ((location.lng - bounds.minLng) / Math.max(0.01, bounds.maxLng - bounds.minLng)) * width;
+      const y = (1 - ((location.lat - bounds.minLat) / Math.max(0.01, bounds.maxLat - bounds.minLat))) * height;
+      return {
+        x: Math.min(width - 14, Math.max(14, x)),
+        y: Math.min(height - 14, Math.max(14, y))
+      };
+    }
+
+    function projectTilePixel(lat, lng, zoom) {
+      const tileSize = 256;
+      const scale = tileSize * (2 ** zoom);
+      const clampedLat = Math.min(85.0511, Math.max(-85.0511, lat));
+      const latRad = clampedLat * Math.PI / 180;
+      return {
+        x: ((lng + 180) / 360) * scale,
+        y: (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * scale
+      };
+    }
+
+    function printMapSvg(mapRows, counties) {
+      const width = 760;
+      const height = 430;
+      const locations = mapRows.map((row) => row.location);
+      counties.forEach((county) => {
+        const center = countyCenters[county];
+        if (center) locations.push({ lat: center[0], lng: center[1] });
+      });
+      const lats = locations.map((item) => item.lat);
+      const lngs = locations.map((item) => item.lng);
+      const geoBounds = {
+        minLat: Math.min(...lats, 34.9) - 0.25,
+        maxLat: Math.max(...lats, 36.8) + 0.25,
+        minLng: Math.min(...lngs, -90.4) - 0.35,
+        maxLng: Math.max(...lngs, -81.5) + 0.35
+      };
+      const lngSpan = geoBounds.maxLng - geoBounds.minLng;
+      const latSpan = geoBounds.maxLat - geoBounds.minLat;
+      const zoom = lngSpan > 12 || latSpan > 5 ? 7 : lngSpan < 4 && latSpan < 2.5 ? 9 : 8;
+      const topLeft = projectTilePixel(geoBounds.maxLat, geoBounds.minLng, zoom);
+      const bottomRight = projectTilePixel(geoBounds.minLat, geoBounds.maxLng, zoom);
+      const spanX = Math.max(1, bottomRight.x - topLeft.x);
+      const spanY = Math.max(1, bottomRight.y - topLeft.y);
+      const mapScale = Math.min(width / spanX, height / spanY);
+      const visibleWorldWidth = width / mapScale;
+      const visibleWorldHeight = height / mapScale;
+      const bounds = {
+        ...geoBounds,
+        zoom,
+        scale: mapScale,
+        originPixelX: topLeft.x - Math.max(0, visibleWorldWidth - spanX) / 2,
+        originPixelY: topLeft.y - Math.max(0, visibleWorldHeight - spanY) / 2
+      };
+      const tileSize = 256;
+      const tileCount = 2 ** zoom;
+      const minTileX = Math.floor(bounds.originPixelX / tileSize);
+      const maxTileX = Math.floor((bounds.originPixelX + visibleWorldWidth) / tileSize);
+      const minTileY = Math.max(0, Math.floor(bounds.originPixelY / tileSize));
+      const maxTileY = Math.min(tileCount - 1, Math.floor((bounds.originPixelY + visibleWorldHeight) / tileSize));
+      const tileImages = [];
+      for (let tileY = minTileY; tileY <= maxTileY; tileY += 1) {
+        for (let tileX = minTileX; tileX <= maxTileX; tileX += 1) {
+          const wrappedTileX = ((tileX % tileCount) + tileCount) % tileCount;
+          const x = (tileX * tileSize - bounds.originPixelX) * mapScale;
+          const y = (tileY * tileSize - bounds.originPixelY) * mapScale;
+          const size = tileSize * mapScale;
+          tileImages.push(`<image href="https://tile.openstreetmap.org/${zoom}/${wrappedTileX}/${tileY}.png" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size.toFixed(1)}" height="${size.toFixed(1)}" preserveAspectRatio="none"></image>`);
+        }
+      }
+      const countyShapes = counties.map((county) => {
+        const center = countyCenters[county];
+        if (!center) return "";
+        const cornerA = projectPrintPoint({ lat: center[0] - 0.18, lng: center[1] - 0.24 }, bounds, width, height);
+        const cornerB = projectPrintPoint({ lat: center[0] + 0.18, lng: center[1] + 0.24 }, bounds, width, height);
+        const x = Math.min(cornerA.x, cornerB.x);
+        const y = Math.min(cornerA.y, cornerB.y);
+        const w = Math.abs(cornerB.x - cornerA.x);
+        const h = Math.abs(cornerB.y - cornerA.y);
+        return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="5" fill="#efe7ff" stroke="#7c2dff" stroke-width="3"><title>${escapeHtml(county)} County filter area</title></rect>`;
+      }).join("");
+      const points = mapRows.map((row) => {
+        const point = projectPrintPoint(row.location, bounds, width, height);
+        const fill = row.org.geo ? "#087f83" : "#276fbf";
+        return `<g><circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="9" fill="${fill}" stroke="#fff" stroke-width="2"></circle><text x="${point.x.toFixed(1)}" y="${(point.y + 4).toFixed(1)}" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">${row.number}</text></g>`;
+      }).join("");
+      return `<svg class="print-map-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Printable map of organization locations">
+        <rect width="${width}" height="${height}" fill="#eef5f6"></rect>
+        <g>${tileImages.join("")}</g>
+        <rect width="${width}" height="${height}" fill="#ffffff" opacity=".18"></rect>
+        ${countyShapes}
+        ${points}
+        <text x="${(width - 8).toFixed(1)}" y="${(height - 8).toFixed(1)}" text-anchor="end" font-size="8" fill="#42525a">Map data © OpenStreetMap contributors</text>
+      </svg>`;
+    }
+
+    function mapCardHtml(org, location) {
+      const services = [...org.mainServices, ...org.additionalServices]
+        .slice(0, 5)
+        .map((service) => `<span>${escapeHtml(service)}</span>`)
+        .join("");
+      const description = org.description ? `${escapeHtml(org.description).slice(0, 190)}${org.description.length > 190 ? "..." : ""}` : "";
+      return `
+        <article class="map-card">
+          <h3>${escapeHtml(org.name)}</h3>
+          <p><strong>Location:</strong> ${escapeHtml(location.label)} <span>(${escapeHtml(location.basis)})</span></p>
+          <p><strong>Serves:</strong> ${escapeHtml(summarizeList(org.counties, 4, "County not listed"))}</p>
+          ${org.address ? `<p><strong>Address:</strong> ${escapeHtml(org.address)}</p>` : ""}
+          <p><strong>Contact person:</strong> ${escapeHtml(org.contact || "Not listed")}</p>
+          <p><strong>Phone:</strong> ${escapeHtml(org.phone || "Not listed")}</p>
+          ${services ? `<div class="map-card-tags">${services}</div>` : ""}
+          ${description ? `<p>${description}</p>` : ""}
+          ${org.website ? `<a class="map-card-link" href="${escapeHtml(org.website)}" target="_blank" rel="noopener">Open website</a>` : ""}
+        </article>
+      `;
+    }
+
+    function renderMap(results) {
+      if (directoryMap) {
+        directoryMap.remove();
+        directoryMap = null;
+        directoryMarkers = null;
+      }
+
+      if (!window.L) {
+        fallbackMap(results);
+        return;
+      }
+
+      const mapLimit = state.printMode === "map-list" ? results.length : 250;
+      const mappedResults = results
+        .map((org, index) => ({ org, location: mapLocationForOrg(org, index) }))
+        .filter((item) => item.location)
+        .slice(0, mapLimit);
+      const showNumberedMarkers = state.printMode === "map-list";
+
+      els.mapPanel.innerHTML = `
+        <div class="map-canvas" id="directoryMapCanvas" aria-label="Organization map"></div>
+        <div class="map-legend" aria-label="Map legend">
+          <div class="map-legend-item"><span class="map-legend-dot" style="background:#087f83"></span>Actual address</div>
+          <div class="map-legend-item"><span class="map-legend-dot" style="background:#276fbf"></span>County center estimate</div>
+          ${selectedMapCounties(results).length ? `<div class="map-legend-item"><span class="map-legend-dot" style="background:#7c2dff"></span>Filtered county border</div>` : ""}
+        </div>
+        <div class="map-notice">
+          Showing ${mappedResults.length} mapped ${mappedResults.length === 1 ? "organization" : "organizations"}${results.length > mappedResults.length ? ` of ${results.length} matching results` : ""}.
+          Pins use organization addresses when available, otherwise the served county center.
+        </div>
+      `;
+
+      directoryMap = L.map("directoryMapCanvas", { scrollWheelZoom: true });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(directoryMap);
+      directoryMarkers = L.layerGroup().addTo(directoryMap);
+
+      const bounds = [];
+      mappedResults.forEach(({ org, location }, index) => {
+        const marker = showNumberedMarkers
+          ? L.marker([location.lat, location.lng], {
+              icon: L.divIcon({
+                className: `map-number-marker ${org.geo ? "actual" : "estimate"}`,
+                html: `<svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="${org.geo ? "#087f83" : "#276fbf"}" stroke="#ffffff" stroke-width="2"></circle><text x="13" y="17" text-anchor="middle" font-size="10" fill="#ffffff" font-weight="800">${index + 1}</text></svg>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+              })
+            })
+          : L.circleMarker([location.lat, location.lng], {
+              radius: 8,
+              color: "#ffffff",
+              weight: 2,
+              fillColor: org.geo ? "#087f83" : "#276fbf",
+              fillOpacity: .95
+            });
+        marker.bindTooltip(escapeHtml(org.name), {
+          direction: "top",
+          offset: [0, -10],
+          opacity: 1,
+          sticky: true
+        });
+        marker.bindPopup(mapCardHtml(org, location), {
+          maxWidth: 340,
+          minWidth: 260,
+          className: "directory-map-popup"
+        });
+        marker.on("mouseover", () => marker.openTooltip());
+        marker.on("mouseout", () => marker.closeTooltip());
+        marker.addTo(directoryMarkers);
+        bounds.push([location.lat, location.lng]);
+      });
+
+      if (bounds.length) {
+        directoryMap.fitBounds(bounds, { padding: [36, 36], maxZoom: 9 });
+      } else {
+        directoryMap.setView([35.86, -86.66], 7);
+      }
+
+      window.setTimeout(() => directoryMap?.invalidateSize(), 0);
+      renderCountyBorders(selectedMapCounties(results)).then(bringOrgMarkersToFront);
+    }
+
+    function renderPrintView(results) {
+      const filterSummary = [];
+      Object.entries(state.filters).forEach(([key, values]) => {
+        values.forEach((value) => filterSummary.push(value));
+      });
+      const printableMapRows = printableMapData(results);
+      const printCounties = selectedMapCounties(results);
+      const mapOnly = state.printMode === "map";
+      const mapWithList = state.printMode === "map-list";
+      if (mapOnly || mapWithList) {
+        const printMapMarkup = `
+          <section class="print-map">
+            <h2>Participating Organization Directory Map</h2>
+            <p><strong>Search:</strong> ${escapeHtml(state.search || "None")}</p>
+            <p><strong>Filters:</strong> ${escapeHtml(filterSummary.join(", ") || "None")}</p>
+            <p><strong>Mapped locations:</strong> ${printableMapRows.length}</p>
+            <div class="print-map-legend">
+              <span>Teal: actual address</span>
+              <span>Blue: county center estimate</span>
+              ${printCounties.length ? "<span>Purple: selected county area</span>" : ""}
+            </div>
+            ${printableMapRows.length ? `<div class="print-map-frame"><div class="print-map-fallback">Map preview unavailable in this print view.</div>${printMapSvg(printableMapRows, printCounties)}</div>` : "<p>No mapped locations are available for the current results.</p>"}
+          </section>
+        `;
+        els.printView.innerHTML = `
+          <h1>${mapOnly ? "Participating Organization Directory Map" : "Participating Organization Directory Map List"}</h1>
+          ${printMapMarkup}
+          ${mapOnly ? "" : `
+          <p><strong>Search:</strong> ${escapeHtml(state.search || "None")}</p>
+          <p><strong>Filters:</strong> ${escapeHtml(filterSummary.join(", ") || "None")}</p>
+          <p><strong>Results:</strong> ${results.length}</p>
+          ${results.map((org, index) => `
+            <section class="print-org">
+              <h2>${index + 1}. ${escapeHtml(org.name)}</h2>
+              <p><strong>Serves:</strong> ${escapeHtml(summarizeList(org.counties, 999, "County not listed"))}</p>
+              <p><strong>Type:</strong> ${escapeHtml(org.organizationType)}</p>
+              <p><strong>Address:</strong> ${escapeHtml(org.address || "Not listed")}</p>
+              <p><strong>Contact person:</strong> ${escapeHtml(org.contact || "Not listed")}</p>
+              <p><strong>Phone:</strong> ${escapeHtml(org.phone || "Not listed")}</p>
+              <p><strong>Email:</strong> ${escapeHtml(org.email || "Not listed")}</p>
+              <p><strong>Services:</strong> ${escapeHtml([...org.mainServices, ...org.additionalServices].join(", "))}</p>
+              <p>${escapeHtml(org.description)}</p>
+            </section>
+          `).join("")}
+          `}
+        `;
+        return;
+      }
+      els.printView.innerHTML = `
+        <h1>${mapOnly ? "Participating Organization Directory Map" : "Participating Organization Directory"}</h1>
+        <p><strong>Search:</strong> ${escapeHtml(state.search || "None")}</p>
+        <p><strong>Filters:</strong> ${escapeHtml(filterSummary.join(", ") || "None")}</p>
+        <p><strong>Results:</strong> ${results.length}</p>
+        ${results.map((org) => `
+          <section class="print-org">
+            <h2>${escapeHtml(org.name)}</h2>
+            <p><strong>Serves:</strong> ${escapeHtml(summarizeList(org.counties, 999, "County not listed"))}</p>
+            <p><strong>Type:</strong> ${escapeHtml(org.organizationType)}</p>
+            <p><strong>Address:</strong> ${escapeHtml(org.address || "Not listed")}</p>
+            <p><strong>Contact person:</strong> ${escapeHtml(org.contact || "Not listed")}</p>
+            <p><strong>Phone:</strong> ${escapeHtml(org.phone || "Not listed")}</p>
+            <p><strong>Email:</strong> ${escapeHtml(org.email || "Not listed")}</p>
+            <p><strong>Services:</strong> ${escapeHtml([...org.mainServices, ...org.additionalServices].join(", "))}</p>
+            <p>${escapeHtml(org.description)}</p>
+          </section>
+        `).join("")}
+      `;
+    }
+
+    function renderResults() {
+      const results = getFilteredOrganizations();
+      els.loadingState.classList.toggle("hidden", !state.isLoading);
+      els.errorState.classList.toggle("hidden", !qlikLoadError);
+      els.errorState.textContent = qlikLoadError ? `Unable to load Qlik data: ${qlikLoadError}` : "";
+
+      if (state.isLoading) {
+        els.resultCount.textContent = "Loading organizations";
+        els.resultSubtext.textContent = "Connecting to Qlik and preparing the directory.";
+        els.resultsGrid.classList.add("hidden");
+        els.mapPanel.classList.remove("active");
+        els.emptyState.classList.remove("active");
+        return;
+      }
+
+      const totalText = results.length === 1 ? "1 matching organization" : `${results.length} matching organizations`;
+      els.resultCount.textContent = totalText;
+
+      const activeParts = [];
+      Object.entries(state.filters).forEach(([key, values]) => {
+        if (values.size > 0) activeParts.push(...values);
+      });
+      els.resultSubtext.textContent = activeParts.length
+        ? `Showing results for ${activeParts.slice(0, 3).join(", ")}${activeParts.length > 3 ? " and more" : ""}.`
+        : "Use search or filters to narrow the directory.";
+
+      const hasResults = results.length > 0;
+      const showMap = state.view === "map" && hasResults;
+      const visibleResults = results.slice(0, state.visibleCount);
+      els.resultsGrid.classList.toggle("hidden", !hasResults || showMap || Boolean(qlikLoadError));
+      els.mapPanel.classList.toggle("active", showMap);
+      els.emptyState.classList.toggle("active", !hasResults && !qlikLoadError);
+      els.paginationActions.classList.toggle("hidden", !hasResults || showMap || state.visibleCount >= results.length);
+      els.loadMoreResults.textContent = `Scroll to load more (${Math.max(0, Math.min(60, results.length - state.visibleCount))} more ready)`;
+
+      renderCards(visibleResults);
+      if (showMap) renderMap(results);
+      renderPrintView(results);
+      queueAddressDistanceLookups(visibleResults);
+    }
+
+    function renderViewButtons() {
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === state.view);
+      });
+    }
+
+    function renderMapPrintButtons() {
+      const show = state.view === "map";
+      els.printMapOnly.classList.toggle("hidden", !show);
+      els.printMapList.classList.toggle("hidden", !show);
+    }
+
+    function render(options = {}) {
+      const shouldRenderFilters = options.filters !== false;
+      renderQuickNeeds();
+      if (shouldRenderFilters) renderFilters();
+      renderActiveFilters();
+      renderViewButtons();
+      renderMapPrintButtons();
+      renderResults();
+    }
+
+    els.searchInput.addEventListener("input", (event) => {
+      state.search = event.target.value;
+      state.activeQuickNeed = "";
+      resetVisibleResults();
+      render({ filters: false });
+    });
+
+    els.searchButton.addEventListener("click", () => {
+      state.search = els.searchInput.value;
+      resetVisibleResults();
+      render({ filters: false });
+    });
+
+    els.toggleFilters.addEventListener("click", () => {
+      state.filtersOpen = !state.filtersOpen;
+      render();
+    });
+
+    els.clearFiltersTop.addEventListener("click", clearFilters);
+    els.clearFiltersEmpty.addEventListener("click", clearFilters);
+    const infiniteObserver = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      const totalVisible = getFilteredOrganizations().length;
+      if (state.visibleCount >= totalVisible || state.view === "map") return;
+      state.visibleCount += 60;
+      render({ filters: false });
+    }, { rootMargin: "500px 0px" });
+    infiniteObserver.observe(els.paginationActions);
+    let viewBeforePrint = "cards";
+
+    function standalonePrintDocument(title, contentHtml) {
+      return `<!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>${escapeHtml(title)}</title>
+            <style>
+              @page { margin: .45in; }
+              * { box-sizing: border-box; }
+              body {
+                margin: 0;
+                color: #111;
+                background: #fff;
+                font: 11pt/1.4 Arial, sans-serif;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+              }
+              h1 { margin: 0 0 12pt; font-size: 18pt; }
+              p { margin: 3pt 0; }
+              .print-org {
+                break-inside: avoid;
+                margin: 0 0 14pt;
+                padding-bottom: 10pt;
+                border-bottom: 1px solid #ccc;
+              }
+              .print-org h2 {
+                margin: 0 0 4pt;
+                font-size: 14pt;
+              }
+              .print-map {
+                break-inside: avoid;
+                margin: 0 0 16pt;
+                padding: 10pt;
+                border: 1px solid #aaa;
+              }
+              .print-map h2 {
+                margin: 0 0 6pt;
+                font-size: 14pt;
+              }
+              .print-map-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8pt 14pt;
+                margin: 6pt 0 10pt;
+                font-size: 10pt;
+              }
+              .print-map-frame {
+                position: relative;
+                width: 100%;
+                min-height: 4.6in;
+                margin: 8pt 0;
+                border: 1px solid #bbb;
+                background: #eef5f6;
+              }
+              .print-map-fallback {
+                position: absolute;
+                inset: 0;
+                display: grid;
+                place-items: center;
+                color: #53636a;
+                font-size: 10pt;
+                text-align: center;
+              }
+              .print-map-svg {
+                position: relative;
+                z-index: 1;
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+                margin: 8pt 0;
+              }
+              @media screen {
+                body { padding: 18px; }
+              }
+            </style>
+          </head>
+          <body>${contentHtml}</body>
+        </html>`;
+    }
+
+    function printDirectory(mode) {
+      viewBeforePrint = state.view;
+      state.printMode = mode;
+      const printPopup = mode === "map" || mode === "map-list" ? window.open("", "_blank") : null;
+      document.body.classList.toggle("print-map-only", mode === "map");
+      document.body.classList.toggle("print-map-list", mode === "map-list");
+      if (mode === "map" || mode === "map-list") state.view = "map";
+      render({ filters: false });
+      if (printPopup) {
+        const title = mode === "map" ? "Participating Organization Directory Map" : "Participating Organization Directory Map List";
+        printPopup.document.open();
+        printPopup.document.write(standalonePrintDocument(title, els.printView.innerHTML));
+        printPopup.document.close();
+        printPopup.focus();
+        window.setTimeout(() => printPopup.print(), 1800);
+        document.body.classList.remove("print-map-only", "print-map-list");
+        state.view = viewBeforePrint;
+        state.printMode = "results";
+        render({ filters: false });
+        return;
+      }
+      window.setTimeout(() => window.print(), mode === "results" ? 0 : 800);
+    }
+
+    window.addEventListener("afterprint", () => {
+      document.body.classList.remove("print-map-only", "print-map-list");
+      state.view = viewBeforePrint;
+      state.printMode = "results";
+      render({ filters: false });
+    });
+
+    els.printResults.addEventListener("click", () => {
+      printDirectory("results");
+    });
+    els.printMapOnly.addEventListener("click", () => {
+      printDirectory("map");
+    });
+    els.printMapList.addEventListener("click", () => {
+      printDirectory("map-list");
+    });
+    els.closeNearby.addEventListener("click", closeNearbyModal);
+    els.nearbyModal.addEventListener("click", (event) => {
+      if (event.target === els.nearbyModal) closeNearbyModal();
+    });
+    els.useLocation.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        els.locationStatus.textContent = "This browser does not support location sharing. Try ZIP/county or choose a county.";
+        return;
+      }
+      els.locationStatus.textContent = "Asking your browser for location permission...";
+      navigator.geolocation.getCurrentPosition((position) => {
+        state.userLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        };
+        const county = nearestCounty(position.coords.latitude, position.coords.longitude);
+        if (county) {
+          els.locationStatus.textContent = `Nearest available county appears to be ${county}. Applying that filter and showing approximate distances.`;
+          applyCountyFilter(county);
+        } else {
+          els.locationStatus.textContent = "Location received, but no matching county was available in the directory data.";
+        }
+      }, () => {
+        els.locationStatus.textContent = "Location was not shared. Try entering ZIP/county or choosing a county.";
+      }, {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000
+      });
+    });
+    els.applyNearbyText.addEventListener("click", () => {
+      const county = normalizeCountyInput(els.nearbyText.value);
+      if (county) {
+        applyCountyFilter(county);
+      } else {
+        els.nearbyText.value = "";
+        els.nearbyText.placeholder = "No match found. Try a county name.";
+      }
+    });
+    els.nearbyText.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") els.applyNearbyText.click();
+    });
+    els.applyNearbyCounty.addEventListener("click", () => {
+      applyCountyFilter(els.nearbyCountySelect.value);
+    });
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.view = button.dataset.view;
+        render({ filters: false });
+      });
+    });
+
+    loadEmergencyHelpContent();
+    render();
+    loadQlikOrganizations();
+  </script>
+</body>
+</html>
