@@ -1415,6 +1415,7 @@
 
     let organizations = [];
     let qlikClient = null;
+    let qlikClientPromise = null;
     let pendingQueryId = 0;
     let qlikLoadError = "";
 
@@ -1951,36 +1952,53 @@
 
     function resetQlikClient() {
       qlikClient = null;
+      qlikClientPromise = null;
       const embedEl = document.getElementById("qlikEmbed");
       if (embedEl) embedEl.remove();
     }
 
     async function initializeQlikClient() {
       if (qlikClient) return qlikClient;
+      if (qlikClientPromise) return qlikClientPromise;
 
-      const container = document.getElementById("qlikEmbedContainer");
-      const embedEl = document.createElement("qlik-embed");
-      embedEl.id = "qlikEmbed";
-      embedEl.setAttribute("ui", "analytics/selections");
-      embedEl.setAttribute("app-id", QLIK_APP_ID);
-      embedEl.setAttribute("sheet-id", QLIK_SHEET_ID);
-      container.appendChild(embedEl);
+      qlikClientPromise = (async () => {
+        const container = document.getElementById("qlikEmbedContainer");
+        if (!container) throw new Error("Directory embed container is missing.");
+        if (!QLIK_APP_ID) throw new Error("Directory app id is missing.");
 
-      const refApi = await waitForQlikEmbed(embedEl);
-      const doc = await refApi.getDoc();
-      const tableDefinition = {
-        qInfo: { qType: "sn-table" },
-        qHyperCubeDef: createCubeDef(tableFields)
-      };
-      const table = await doc.createSessionObject(tableDefinition);
-      const tableProperties = await table.getProperties();
-      const columns = [
-        ...tableProperties.qHyperCubeDef.qDimensions,
-        ...tableProperties.qHyperCubeDef.qMeasures
-      ].map((column) => ({ name: column.qDef.qLabel || column.qDef.qFieldLabels[0] }));
+        let embedEl = document.getElementById("qlikEmbed");
+        if (!embedEl) {
+          embedEl = document.createElement("qlik-embed");
+          embedEl.id = "qlikEmbed";
+          embedEl.setAttribute("ui", "analytics/selections");
+          embedEl.setAttribute("app-id", QLIK_APP_ID);
+          embedEl.setAttribute("sheet-id", QLIK_SHEET_ID);
+          container.appendChild(embedEl);
+        }
 
-      qlikClient = { doc, table, columns };
-      return qlikClient;
+        const refApi = await waitForQlikEmbed(embedEl);
+        const doc = await refApi.getDoc();
+        const tableDefinition = {
+          qInfo: { qType: "sn-table" },
+          qHyperCubeDef: createCubeDef(tableFields)
+        };
+        const table = await doc.createSessionObject(tableDefinition);
+        const tableProperties = await table.getProperties();
+        const columns = [
+          ...tableProperties.qHyperCubeDef.qDimensions,
+          ...tableProperties.qHyperCubeDef.qMeasures
+        ].map((column) => ({ name: column.qDef.qLabel || column.qDef.qFieldLabels[0] }));
+
+        qlikClient = { doc, table, columns };
+        return qlikClient;
+      })();
+
+      try {
+        return await qlikClientPromise;
+      } catch (error) {
+        resetQlikClient();
+        throw error;
+      }
     }
 
     async function trySelectField(doc, fieldName, values) {

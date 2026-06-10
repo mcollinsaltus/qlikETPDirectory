@@ -1,9 +1,8 @@
 <?php
 /**
- * Plugin Name: ETP Searchable Directory Config
- * Description: Admin configuration tools for the ETP Searchable Directory.
- * Author: ETP
- * Version: 1.0.0
+ * ETP Searchable Directory Config module.
+ *
+ * Loaded by the main Qlik Directory plugin.
  */
 
 namespace ETP\SearchableDirectoryConfig;
@@ -55,7 +54,6 @@ function activate() {
         publish_json(default_config());
     }
 }
-\register_activation_hook(__FILE__, __NAMESPACE__ . '\\activate');
 
 /**
  * Keep role capabilities available after plugin updates.
@@ -407,6 +405,7 @@ function get_deployed_directories() {
         $public_key = sanitize_public_key($directory['public_key'] ?? $stored_key);
         $name = \sanitize_text_field($directory['name'] ?? '');
         $app_id = sanitize_app_id($directory['app_id'] ?? '');
+        $access_code = \sanitize_text_field($directory['access_code'] ?? '');
         if ($public_key === '' || $name === '' || $app_id === '') {
             continue;
         }
@@ -415,6 +414,7 @@ function get_deployed_directories() {
             'name' => $name,
             'public_key' => $public_key,
             'app_id' => $app_id,
+            'access_code' => $access_code,
         );
     }
 
@@ -530,6 +530,7 @@ function handle_admin_post() {
         $public_key = sanitize_public_key($_POST['public_key'] ?? '');
         $name = \sanitize_text_field($_POST['name'] ?? '');
         $app_id = sanitize_app_id($_POST['app_id'] ?? '');
+        $access_code = \sanitize_text_field($_POST['access_code'] ?? '');
 
         if ($name === '' || $public_key === '' || $app_id === '') {
             redirect_with_notice('missing_directory_fields', DEPLOYED_DIRECTORIES_SLUG);
@@ -552,6 +553,7 @@ function handle_admin_post() {
             'name' => $name,
             'public_key' => $public_key,
             'app_id' => $app_id,
+            'access_code' => $access_code,
         );
 
         save_deployed_directories($directories);
@@ -1157,7 +1159,7 @@ function render_deployed_directories_page() {
 
     $directories = get_deployed_directories();
     $edit = sanitize_public_key($_GET['edit_directory'] ?? '');
-    $editing = $edit !== '' && isset($directories[$edit]) ? $directories[$edit] : array('name' => '', 'public_key' => '', 'app_id' => '');
+    $editing = $edit !== '' && isset($directories[$edit]) ? $directories[$edit] : array('name' => '', 'public_key' => '', 'app_id' => '', 'access_code' => '');
     $notice = \sanitize_key($_GET['etp_sdc_notice'] ?? '');
     ?>
     <div class="wrap etp-sdc-wrap">
@@ -1200,6 +1202,7 @@ function render_deployed_directories_page() {
                                         <th>Name</th>
                                         <th>Public key</th>
                                         <th>Qlik app id</th>
+                                        <th>Access code</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -1209,6 +1212,7 @@ function render_deployed_directories_page() {
                                             <td><strong><?php echo \esc_html($directory['name']); ?></strong></td>
                                             <td><code><?php echo \esc_html($directory['public_key']); ?></code></td>
                                             <td><code><?php echo \esc_html($directory['app_id']); ?></code></td>
+                                            <td><?php echo !empty($directory['access_code']) ? '<span class="dashicons dashicons-yes-alt"></span> Set' : '<span class="etp-sdc-muted">Not set</span>'; ?></td>
                                             <td>
                                                 <a href="<?php echo \esc_url(\add_query_arg(array('page' => DEPLOYED_DIRECTORIES_SLUG, 'edit_directory' => $directory['public_key']), \admin_url('admin.php'))); ?>">Edit</a>
                                                 <span class="trash"><?php render_deployed_directory_delete_button($directory['public_key']); ?></span>
@@ -1242,6 +1246,11 @@ function render_deployed_directories_page() {
                         <div class="etp-sdc-field">
                             <label for="etp-sdc-directory-app-id">Qlik app id</label>
                             <input id="etp-sdc-directory-app-id" type="text" name="app_id" value="<?php echo \esc_attr($editing['app_id']); ?>" required>
+                        </div>
+                        <div class="etp-sdc-field">
+                            <label for="etp-sdc-directory-access-code">Qlik access code</label>
+                            <input id="etp-sdc-directory-access-code" type="text" name="access_code" value="<?php echo \esc_attr($editing['access_code']); ?>">
+                            <p class="description">Stored server-side and applied when partner links use this public directory key.</p>
                         </div>
                         <?php \submit_button($edit !== '' ? 'Save directory' : 'Add directory'); ?>
                         <?php if ($edit !== '') : ?>

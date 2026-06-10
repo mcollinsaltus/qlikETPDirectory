@@ -1,6 +1,6 @@
 const DEFAULT_QLIK_APP_ID = "edfe9bc5-be35-4bde-b515-e72fe46b5240";
 const DEFAULT_QLIK_SHEET_ID = "mGLGNCp";
-const directoryDatasetConfig = document.querySelector(".qlik-directory-dashboard[data-app-id], #qlikEmbedContainer[data-app-id], [data-app-id]");
+const directoryDatasetConfig = document.querySelector(".qlik-directory-dashboard[data-app-id], #qlikEmbedContainer[data-app-id]");
 const directorySearchParams = new URLSearchParams(window.location.search);
 const urlAppId = directorySearchParams.has("directory") ? "" : directorySearchParams.get("appId");
 const QLIK_APP_ID = (urlAppId || directoryDatasetConfig?.dataset.appId || DEFAULT_QLIK_APP_ID).trim();
@@ -39,8 +39,18 @@ const qlikFilterFields = {
 
 let organizations = [];
 let qlikClient = null;
+let qlikClientPromise = null;
 let pendingQueryId = 0;
 let qlikLoadError = "";
+
+function withTimeout(promise, milliseconds, message) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), milliseconds);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
+}
 
 const filterConfig = [
   { key: "counties", label: "Location", searchPlaceholder: "Search counties" },
@@ -575,36 +585,53 @@ function isRecoverableQlikSessionError(error) {
 
 function resetQlikClient() {
   qlikClient = null;
+  qlikClientPromise = null;
   const embedEl = document.getElementById("qlikEmbed");
   if (embedEl) embedEl.remove();
 }
 
 async function initializeQlikClient() {
   if (qlikClient) return qlikClient;
+  if (qlikClientPromise) return qlikClientPromise;
 
-  const container = document.getElementById("qlikEmbedContainer");
-  const embedEl = document.createElement("qlik-embed");
-  embedEl.id = "qlikEmbed";
-  embedEl.setAttribute("ui", "analytics/selections");
-  embedEl.setAttribute("app-id", QLIK_APP_ID);
-  embedEl.setAttribute("sheet-id", QLIK_SHEET_ID);
-  container.appendChild(embedEl);
+  qlikClientPromise = (async () => {
+    const container = document.getElementById("qlikEmbedContainer");
+    if (!container) throw new Error("Directory embed container is missing.");
+    if (!QLIK_APP_ID) throw new Error("Directory app id is missing.");
 
-  const refApi = await waitForQlikEmbed(embedEl);
-  const doc = await refApi.getDoc();
-  const tableDefinition = {
-    qInfo: { qType: "sn-table" },
-    qHyperCubeDef: createCubeDef(tableFields)
-  };
-  const table = await doc.createSessionObject(tableDefinition);
-  const tableProperties = await table.getProperties();
-  const columns = [
-    ...tableProperties.qHyperCubeDef.qDimensions,
-    ...tableProperties.qHyperCubeDef.qMeasures
-  ].map((column) => ({ name: column.qDef.qLabel || column.qDef.qFieldLabels[0] }));
+    let embedEl = document.getElementById("qlikEmbed");
+    if (!embedEl) {
+      embedEl = document.createElement("qlik-embed");
+      embedEl.id = "qlikEmbed";
+      embedEl.setAttribute("ui", "analytics/selections");
+      embedEl.setAttribute("app-id", QLIK_APP_ID);
+      embedEl.setAttribute("sheet-id", QLIK_SHEET_ID);
+      container.appendChild(embedEl);
+    }
 
-  qlikClient = { doc, table, columns };
-  return qlikClient;
+    const refApi = await waitForQlikEmbed(embedEl);
+    const doc = await withTimeout(refApi.getDoc(), 20000, "Qlik document connection timed out.");
+    const tableDefinition = {
+      qInfo: { qType: "sn-table" },
+      qHyperCubeDef: createCubeDef(tableFields)
+    };
+    const table = await withTimeout(doc.createSessionObject(tableDefinition), 20000, "Qlik directory table setup timed out.");
+    const tableProperties = await withTimeout(table.getProperties(), 20000, "Qlik directory table properties timed out.");
+    const columns = [
+      ...tableProperties.qHyperCubeDef.qDimensions,
+      ...tableProperties.qHyperCubeDef.qMeasures
+    ].map((column) => ({ name: column.qDef.qLabel || column.qDef.qFieldLabels[0] }));
+
+    qlikClient = { doc, table, columns };
+    return qlikClient;
+  })();
+
+  try {
+    return await qlikClientPromise;
+  } catch (error) {
+    resetQlikClient();
+    throw error;
+  }
 }
 
 async function trySelectField(doc, fieldName, values) {
@@ -761,15 +788,15 @@ async function queryDirectoryPage({ append }) {
   }
   await applyQlikSelections(client.doc, filters, state.search);
 
-  const tableLayout = await client.table.getLayout();
+  const tableLayout = await withTimeout(client.table.getLayout(), 20000, "Qlik directory layout timed out.");
   const totalRows = tableLayout.qHyperCube.qSize.qcy;
   const start = append ? organizations.length : 0;
-  const data = await client.table.getHyperCubeData("/qHyperCubeDef", [{
+  const data = await withTimeout(client.table.getHyperCubeData("/qHyperCubeDef", [{
     qLeft: 0,
     qTop: start,
     qWidth: tableFields.length,
     qHeight: PAGE_SIZE
-  }]);
+  }]), 20000, "Qlik directory data request timed out.");
 
   return { client, data, filters, start, totalRows };
 }

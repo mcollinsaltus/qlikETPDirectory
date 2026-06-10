@@ -12,6 +12,8 @@ if (!\defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/etp-searchable-directory-config.php';
+
 if (!\defined('ALTUS_QLIK_DIRECTORY_DEFAULT_APP_ID')) {
     \define('ALTUS_QLIK_DIRECTORY_DEFAULT_APP_ID', 'edfe9bc5-be35-4bde-b515-e72fe46b5240');
 }
@@ -33,6 +35,14 @@ if (!\defined('ALTUS_QLIK_DIRECTORY_EMERGENCY_HELP_FILE')) {
 if (!\defined('ALTUS_QLIK_DIRECTORY_DEPLOYED_DIRECTORIES_OPTION')) {
     \define('ALTUS_QLIK_DIRECTORY_DEPLOYED_DIRECTORIES_OPTION', 'etp_sdc_deployed_directories');
 }
+
+/**
+ * Activate the main plugin and seed bundled directory config defaults.
+ */
+function qlik_directory_activate() {
+    \ETP\SearchableDirectoryConfig\activate();
+}
+\register_activation_hook(__FILE__, __NAMESPACE__ . '\\qlik_directory_activate');
 
 /**
  * Resolve first non-empty attr from key list.
@@ -77,20 +87,20 @@ function qlik_directory_sanitize_public_key($key) {
 }
 
 /**
- * Resolve a public directory key to a Qlik app id.
+ * Resolve a public directory key to stored Qlik connection values.
  *
  * @param string $public_key Public directory key.
- * @return string
+ * @return array
  */
-function qlik_directory_app_id_for_public_key($public_key) {
+function qlik_directory_for_public_key($public_key) {
     $public_key = qlik_directory_sanitize_public_key($public_key);
     if ($public_key === '') {
-        return '';
+        return array();
     }
 
     $directories = get_option(\ALTUS_QLIK_DIRECTORY_DEPLOYED_DIRECTORIES_OPTION, array());
     if (!is_array($directories)) {
-        return '';
+        return array();
     }
 
     foreach ($directories as $stored_key => $directory) {
@@ -101,11 +111,14 @@ function qlik_directory_app_id_for_public_key($public_key) {
         $candidate_key = qlik_directory_sanitize_public_key($directory['public_key'] ?? $stored_key);
         $app_id = sanitize_text_field($directory['app_id'] ?? '');
         if ($candidate_key === $public_key && $app_id !== '') {
-            return $app_id;
+            return array(
+                'app_id' => $app_id,
+                'access_code' => sanitize_text_field($directory['access_code'] ?? ''),
+            );
         }
     }
 
-    return '';
+    return array();
 }
 
 /**
@@ -115,19 +128,26 @@ function qlik_directory_app_id_for_public_key($public_key) {
  * @return array
  */
 function qlik_directory_resolve_request(array $atts) {
+    $access_code = sanitize_text_field(qlik_directory_query_attr(array('accessCode', 'access_code', 'qlik_access_code')));
+    if ($access_code === '') {
+        $access_code = sanitize_text_field(qlik_directory_attr($atts, array('access_code', 'qlik_access_code', 'accessCode'), ''));
+    }
+
     $directory_key = qlik_directory_sanitize_public_key(qlik_directory_query_attr(array('directory')));
     if ($directory_key !== '') {
-        $app_id = qlik_directory_app_id_for_public_key($directory_key);
-        if ($app_id === '') {
+        $directory = qlik_directory_for_public_key($directory_key);
+        if (empty($directory['app_id'])) {
             return array(
                 'app_id' => '',
+                'access_code' => $access_code,
                 'directory_key' => $directory_key,
                 'error' => 'unknown_directory',
             );
         }
 
         return array(
-            'app_id' => $app_id,
+            'app_id' => $directory['app_id'],
+            'access_code' => $directory['access_code'] !== '' ? $directory['access_code'] : $access_code,
             'directory_key' => $directory_key,
             'error' => '',
         );
@@ -137,6 +157,7 @@ function qlik_directory_resolve_request(array $atts) {
     if ($url_app_id !== '') {
         return array(
             'app_id' => $url_app_id,
+            'access_code' => $access_code,
             'directory_key' => '',
             'error' => '',
         );
@@ -144,6 +165,7 @@ function qlik_directory_resolve_request(array $atts) {
 
     return array(
         'app_id' => sanitize_text_field(qlik_directory_attr($atts, array('app_id', 'qlik_app_id', 'appId'), \ALTUS_QLIK_DIRECTORY_DEFAULT_APP_ID)),
+        'access_code' => $access_code,
         'directory_key' => '',
         'error' => '',
     );
@@ -357,7 +379,7 @@ function qlik_directory_dashboard_shortcode($atts = array()) {
     $sheet_id = sanitize_text_field(qlik_directory_attr($atts, array('sheet_id', 'qlik_sheet_id', 'sheetId'), \ALTUS_QLIK_DIRECTORY_DEFAULT_SHEET_ID));
     $host = esc_url_raw(qlik_directory_attr($atts, array('host', 'qlik_host'), \ALTUS_QLIK_DIRECTORY_DEFAULT_HOST));
     $client_id = sanitize_text_field(qlik_directory_attr($atts, array('client_id', 'qlik_client_id', 'clientId'), \ALTUS_QLIK_DIRECTORY_DEFAULT_CLIENT_ID));
-    $access_code = sanitize_text_field(qlik_directory_attr($atts, array('access_code', 'qlik_access_code', 'accessCode'), ''));
+    $access_code = sanitize_text_field($request['access_code']);
     $auth_type = sanitize_key(qlik_directory_attr($atts, array('auth_type', 'qlik_auth_type', 'authType'), \ALTUS_QLIK_DIRECTORY_DEFAULT_AUTH_TYPE));
     $emergency_help_url = esc_url_raw(qlik_directory_attr($atts, array('emergency_help_url', 'emergencyHelpUrl'), qlik_directory_default_emergency_help_url()));
     $theme_style = qlik_directory_theme_style($atts);
