@@ -680,7 +680,7 @@ function admin_styles() {
         .etp-sdc-wrap .etp-sdc-panel-body { padding:14px; }
         .etp-sdc-wrap .etp-sdc-field { margin-bottom:14px; }
         .etp-sdc-wrap .etp-sdc-field label { display:block; margin-bottom:5px; font-weight:600; }
-        .etp-sdc-wrap input[type="text"], .etp-sdc-wrap input[type="url"], .etp-sdc-wrap textarea { width:100%; max-width:100%; }
+        .etp-sdc-wrap input[type="text"], .etp-sdc-wrap input[type="url"], .etp-sdc-wrap select, .etp-sdc-wrap textarea { width:100%; max-width:100%; }
         .etp-sdc-wrap textarea { min-height:74px; }
         .etp-sdc-wrap .etp-sdc-two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
         .etp-sdc-wrap .etp-sdc-section { border:1px solid #dcdcde; margin:14px 0; background:#fff; }
@@ -1496,11 +1496,28 @@ function render_iframe_links_page() {
                                     <div class="etp-sdc-font-grid">
                                         <div class="etp-sdc-field">
                                             <label for="etp-sdc-font-family">Body font</label>
-                                            <input id="etp-sdc-font-family" type="text" data-etp-theme-param="font_family" data-preview-default="Inter, Arial, sans-serif" placeholder="Inter, Arial, sans-serif">
+                                            <select id="etp-sdc-font-family" data-etp-theme-param="font_family" data-preview-default="Inter, Arial, sans-serif">
+                                                <option value="Inter, Arial, sans-serif">Inter / Arial</option>
+                                                <option value="Arial, Helvetica, sans-serif">Arial / Helvetica</option>
+                                                <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                                                <option value="Tahoma, Geneva, sans-serif">Tahoma</option>
+                                                <option value="'Trebuchet MS', Arial, sans-serif">Trebuchet MS</option>
+                                                <option value="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">System UI</option>
+                                                <option value="Georgia, serif">Georgia</option>
+                                                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                                            </select>
                                         </div>
                                         <div class="etp-sdc-field">
                                             <label for="etp-sdc-heading-font">Heading font</label>
-                                            <input id="etp-sdc-heading-font" type="text" data-etp-theme-param="heading_font" data-preview-default="Georgia, serif" placeholder="Georgia, serif">
+                                            <select id="etp-sdc-heading-font" data-etp-theme-param="heading_font" data-preview-default="Georgia, serif">
+                                                <option value="Georgia, serif">Georgia</option>
+                                                <option value="Inter, Arial, sans-serif">Inter / Arial</option>
+                                                <option value="Arial, Helvetica, sans-serif">Arial / Helvetica</option>
+                                                <option value="'Trebuchet MS', Arial, sans-serif">Trebuchet MS</option>
+                                                <option value="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">System UI</option>
+                                                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                                                <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
