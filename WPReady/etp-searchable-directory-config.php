@@ -691,13 +691,56 @@ function admin_styles() {
         .etp-sdc-wrap .etp-sdc-status-list { display:grid; gap:10px; }
         .etp-sdc-wrap .etp-sdc-status-list span { color:#00a32a; font-weight:700; margin-right:8px; }
         .etp-sdc-wrap .etp-sdc-wizard { display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:18px; align-items:start; }
-        .etp-sdc-wrap .etp-sdc-color-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
-        .etp-sdc-wrap .etp-sdc-color-grid input { font-family:monospace; }
+        .etp-sdc-wrap .etp-sdc-theme-editor { display:grid; grid-template-columns:minmax(360px, 0.95fr) minmax(360px, 1.05fr); gap:18px; align-items:start; }
+        .etp-sdc-wrap .etp-sdc-theme-group { margin:0 0 18px; }
+        .etp-sdc-wrap .etp-sdc-theme-group h3 { margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:#50575e; }
+        .etp-sdc-wrap .etp-sdc-color-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+        .etp-sdc-wrap .etp-sdc-color-control { margin:0; }
+        .etp-sdc-wrap .etp-sdc-color-control label { display:block; margin-bottom:5px; font-weight:600; }
+        .etp-sdc-wrap .etp-sdc-swatch-row { display:grid; grid-template-columns:42px minmax(0, 1fr); gap:7px; align-items:center; }
+        .etp-sdc-wrap .etp-sdc-swatch-row input[type="color"] { width:42px; height:38px; padding:1px; border:1px solid #8c8f94; border-radius:4px; background:#fff; cursor:pointer; }
+        .etp-sdc-wrap .etp-sdc-swatch-row input[type="text"] { font-family:monospace; min-height:38px; }
+        .etp-sdc-wrap .etp-sdc-font-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .etp-sdc-wrap .etp-sdc-preview-shell { position:sticky; top:42px; border:1px solid #c3c4c7; background:#f6f7f7; padding:12px; }
+        .etp-sdc-wrap .etp-sdc-preview-toolbar { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:10px; color:#50575e; font-size:12px; }
+        .etp-sdc-wrap .etp-sdc-live-preview { --preview-text:#0b1828; --preview-muted:#58677a; --preview-line:#d7e2ea; --preview-paper:#f4f8fa; --preview-surface:#ffffff; --preview-primary:#087f83; --preview-primary-dark:#005f62; --preview-primary-soft:#d8f0ee; --preview-secondary:#276fbf; --preview-secondary-soft:#e5f0ff; --preview-accent:#f3ad2e; --preview-accent-soft:#fff3d5; --preview-success:#2f8a52; --preview-success-soft:#dcf3e4; --preview-danger:#d95846; --preview-font:Inter, Arial, sans-serif; --preview-heading:Georgia, serif; border:1px solid var(--preview-line); background:var(--preview-paper); color:var(--preview-text); font-family:var(--preview-font); overflow:hidden; }
+        .etp-sdc-wrap .etp-sdc-live-hero { background:linear-gradient(135deg, var(--preview-primary), var(--preview-primary-dark)); color:#fff; padding:22px; }
+        .etp-sdc-wrap .etp-sdc-live-eyebrow { display:inline-flex; border:1px solid rgba(255,255,255,.45); border-radius:999px; padding:3px 10px; font-size:11px; font-weight:700; text-transform:uppercase; }
+        .etp-sdc-wrap .etp-sdc-live-hero h3 { margin:8px 0 6px; color:inherit; font-family:var(--preview-heading); font-size:24px; line-height:1.1; }
+        .etp-sdc-wrap .etp-sdc-live-hero p { margin:0; max-width:520px; color:#fff; }
+        .etp-sdc-wrap .etp-sdc-live-search { margin:-16px 18px 14px; padding:10px; border-radius:6px; background:var(--preview-surface); border:1px solid var(--preview-line); box-shadow:0 10px 22px rgba(0,0,0,.08); display:flex; gap:8px; }
+        .etp-sdc-wrap .etp-sdc-live-input { flex:1; border:1px solid var(--preview-line); border-radius:4px; padding:10px 12px; color:var(--preview-muted); background:#fff; }
+        .etp-sdc-wrap .etp-sdc-live-button { border:0; border-radius:4px; padding:10px 12px; background:var(--preview-primary); color:#fff; font-weight:700; }
+        .etp-sdc-wrap .etp-sdc-live-body { display:grid; grid-template-columns:130px 1fr; gap:14px; padding:0 18px 18px; }
+        .etp-sdc-wrap .etp-sdc-live-filter { background:var(--preview-surface); border:1px solid var(--preview-line); border-radius:5px; padding:10px; }
+        .etp-sdc-wrap .etp-sdc-live-filter strong { display:block; margin-bottom:8px; }
+        .etp-sdc-wrap .etp-sdc-live-pill { display:inline-flex; margin:0 4px 6px 0; padding:5px 8px; border-radius:5px; background:var(--preview-primary-soft); color:var(--preview-primary-dark); font-size:11px; font-weight:700; }
+        .etp-sdc-wrap .etp-sdc-live-main h4 { margin:0 0 4px; color:var(--preview-text); font-size:17px; font-family:var(--preview-heading); }
+        .etp-sdc-wrap .etp-sdc-live-main p { margin:0 0 10px; color:var(--preview-muted); }
+        .etp-sdc-wrap .etp-sdc-live-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .etp-sdc-wrap .etp-sdc-live-card { border:1px solid var(--preview-line); border-top:4px solid var(--preview-secondary); border-radius:5px; background:var(--preview-surface); padding:11px; min-height:138px; }
+        .etp-sdc-wrap .etp-sdc-live-card:nth-child(2) { border-top-color:var(--preview-accent); }
+        .etp-sdc-wrap .etp-sdc-live-card h5 { margin:0 0 7px; font-size:14px; line-height:1.2; color:var(--preview-text); }
+        .etp-sdc-wrap .etp-sdc-live-card p { margin:0 0 8px; color:var(--preview-muted); font-size:12px; }
+        .etp-sdc-wrap .etp-sdc-live-tag { display:inline-flex; border-radius:999px; padding:4px 7px; background:var(--preview-success-soft); color:var(--preview-success); font-size:10px; font-weight:700; }
+        .etp-sdc-wrap .etp-sdc-live-danger { background:var(--preview-accent-soft); color:var(--preview-danger); }
+        .etp-sdc-wrap .etp-sdc-live-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:12px; }
+        .etp-sdc-wrap .etp-sdc-live-actions span { display:block; text-align:center; border-radius:4px; padding:8px; font-weight:700; background:var(--preview-primary); color:#fff; }
+        .etp-sdc-wrap .etp-sdc-live-actions span + span { background:var(--preview-secondary-soft); color:var(--preview-text); }
         .etp-sdc-wrap .etp-sdc-generated { min-height:120px; font-family:monospace; }
         .etp-sdc-wrap .etp-sdc-copy-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
         .etp-sdc-wrap .etp-sdc-muted { color:#646970; }
         .etp-sdc-wrap .etp-sdc-hidden { display:none; }
         .etp-sdc-wrap pre { overflow:auto; max-height:520px; padding:14px; background:#101517; color:#d7e8f7; }
+        @media (max-width: 1280px) {
+            .etp-sdc-wrap .etp-sdc-wizard, .etp-sdc-wrap .etp-sdc-theme-editor { grid-template-columns:1fr; }
+            .etp-sdc-wrap .etp-sdc-preview-shell { position:static; }
+        }
+        @media (max-width: 782px) {
+            .etp-sdc-wrap .etp-sdc-color-grid, .etp-sdc-wrap .etp-sdc-font-grid, .etp-sdc-wrap .etp-sdc-live-body, .etp-sdc-wrap .etp-sdc-live-cards { grid-template-columns:1fr; }
+            .etp-sdc-wrap .etp-sdc-live-search { display:block; }
+            .etp-sdc-wrap .etp-sdc-live-button { margin-top:8px; width:100%; }
+        }
     </style>
     <?php
 }
@@ -793,6 +836,8 @@ function admin_scripts() {
         const modeInputs = iframeWizard.querySelectorAll("[data-etp-iframe-mode]");
         const themeFields = iframeWizard.querySelector("[data-etp-theme-fields]");
         const themeInputs = iframeWizard.querySelectorAll("[data-etp-theme-param]");
+        const colorPickers = iframeWizard.querySelectorAll("[data-etp-theme-color-picker]");
+        const preview = iframeWizard.querySelector("[data-etp-theme-preview]");
         const srcOutput = iframeWizard.querySelector("[data-etp-iframe-src]");
         const htmlOutput = iframeWizard.querySelector("[data-etp-iframe-html]");
         const copyStatus = iframeWizard.querySelector("[data-etp-copy-status]");
@@ -800,10 +845,67 @@ function admin_scripts() {
 
         const isHexColor = (value) => /^#?[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(value);
         const isFontStack = (value) => /^[A-Za-z0-9\s,"'\-_]+$/.test(value) && value.length <= 160;
+        const themePreviewMap = {
+            text: "--preview-text",
+            muted: "--preview-muted",
+            line: "--preview-line",
+            paper: "--preview-paper",
+            surface: "--preview-surface",
+            primary: "--preview-primary",
+            primary_dark: "--preview-primary-dark",
+            primary_soft: "--preview-primary-soft",
+            secondary: "--preview-secondary",
+            secondary_soft: "--preview-secondary-soft",
+            accent: "--preview-accent",
+            accent_soft: "--preview-accent-soft",
+            success: "--preview-success",
+            success_soft: "--preview-success-soft",
+            danger: "--preview-danger",
+            font_family: "--preview-font",
+            heading_font: "--preview-heading"
+        };
 
         function getMode() {
             const checked = Array.prototype.find.call(modeInputs, (input) => input.checked);
             return checked ? checked.value : "default";
+        }
+
+        function normalizeHex(value) {
+            const clean = value.trim().replace(/^#/, "");
+            if (!isHexColor(clean)) return "";
+            if (clean.length === 3) {
+                return clean.split("").map((letter) => letter + letter).join("").toLowerCase();
+            }
+            return clean.toLowerCase();
+        }
+
+        function themeValue(input) {
+            const value = input.value.trim();
+            if (value) return value;
+            return input.dataset.previewDefault || input.placeholder || "";
+        }
+
+        function syncColorPicker(input) {
+            const picker = iframeWizard.querySelector(`[data-etp-theme-color-picker="${input.dataset.etpThemeParam}"]`);
+            const hex = normalizeHex(themeValue(input));
+            if (picker && hex) picker.value = `#${hex}`;
+        }
+
+        function updateThemePreview() {
+            if (!preview) return;
+            themeInputs.forEach((input) => {
+                const param = input.dataset.etpThemeParam;
+                const property = themePreviewMap[param];
+                if (!property) return;
+                if (param.indexOf("font") !== -1) {
+                    const value = themeValue(input);
+                    if (isFontStack(value)) preview.style.setProperty(property, value);
+                    return;
+                }
+                const hex = normalizeHex(themeValue(input));
+                if (hex) preview.style.setProperty(property, `#${hex}`);
+                syncColorPicker(input);
+            });
         }
 
         function buildIframeLink() {
@@ -815,6 +917,7 @@ function admin_scripts() {
             if (themeFields) {
                 themeFields.classList.toggle("etp-sdc-hidden", !customMode);
             }
+            updateThemePreview();
 
             if (!embedBaseUrl || !publicKey) {
                 srcOutput.value = "";
@@ -849,6 +952,14 @@ function admin_scripts() {
 ></iframe>`;
         }
 
+        colorPickers.forEach((picker) => {
+            picker.addEventListener("input", function () {
+                const input = iframeWizard.querySelector(`[data-etp-theme-param="${picker.dataset.etpThemeColorPicker}"]`);
+                if (input) input.value = picker.value.replace(/^#/, "");
+                buildIframeLink();
+            });
+        });
+        themeInputs.forEach(syncColorPicker);
         iframeWizard.addEventListener("input", buildIframeLink);
         iframeWizard.addEventListener("change", buildIframeLink);
         buildIframeLink();
@@ -1333,43 +1444,107 @@ function render_iframe_links_page() {
                 </div>
 
                 <div class="etp-sdc-panel etp-sdc-hidden" data-etp-theme-fields>
-                    <h2>3. Customize theme</h2>
+                    <h2>3. Customize theme with live preview</h2>
                     <div class="etp-sdc-panel-body">
-                        <div class="etp-sdc-color-grid">
-                            <?php
-                            $color_fields = array(
-                                'primary' => 'Primary',
-                                'primary_dark' => 'Primary dark',
-                                'primary_soft' => 'Primary soft',
-                                'secondary' => 'Secondary',
-                                'secondary_soft' => 'Secondary soft',
-                                'accent' => 'Accent',
-                                'accent_soft' => 'Accent soft',
-                                'success' => 'Success',
-                                'success_soft' => 'Success soft',
-                                'danger' => 'Danger',
-                                'text' => 'Text',
-                                'muted' => 'Muted',
-                                'line' => 'Line',
-                                'paper' => 'Paper',
-                                'surface' => 'Surface',
-                            );
-                            foreach ($color_fields as $param => $label) :
-                                ?>
-                                <div class="etp-sdc-field">
-                                    <label for="etp-sdc-theme-<?php echo \esc_attr($param); ?>"><?php echo \esc_html($label); ?></label>
-                                    <input id="etp-sdc-theme-<?php echo \esc_attr($param); ?>" type="text" data-etp-theme-param="<?php echo \esc_attr($param); ?>" placeholder="004f71">
+                        <?php
+                        $theme_color_groups = array(
+                            'Brand colors' => array(
+                                'primary' => array('Primary', '087f83'),
+                                'primary_dark' => array('Primary dark', '005f62'),
+                                'primary_soft' => array('Primary soft', 'd8f0ee'),
+                                'secondary' => array('Secondary', '276fbf'),
+                                'secondary_soft' => array('Secondary soft', 'e5f0ff'),
+                            ),
+                            'Page colors' => array(
+                                'text' => array('Text', '0b1828'),
+                                'muted' => array('Muted', '58677a'),
+                                'line' => array('Lines', 'd7e2ea'),
+                                'paper' => array('Page background', 'f4f8fa'),
+                                'surface' => array('Cards and panels', 'ffffff'),
+                            ),
+                            'Highlights' => array(
+                                'accent' => array('Accent', 'f3ad2e'),
+                                'accent_soft' => array('Accent soft', 'fff3d5'),
+                                'success' => array('Success', '2f8a52'),
+                                'success_soft' => array('Success soft', 'dcf3e4'),
+                                'danger' => array('Alert', 'd95846'),
+                            ),
+                        );
+                        ?>
+                        <div class="etp-sdc-theme-editor">
+                            <div>
+                                <?php foreach ($theme_color_groups as $group_label => $color_fields) : ?>
+                                    <div class="etp-sdc-theme-group">
+                                        <h3><?php echo \esc_html($group_label); ?></h3>
+                                        <div class="etp-sdc-color-grid">
+                                            <?php foreach ($color_fields as $param => $field) : ?>
+                                                <div class="etp-sdc-color-control">
+                                                    <label for="etp-sdc-theme-<?php echo \esc_attr($param); ?>"><?php echo \esc_html($field[0]); ?></label>
+                                                    <div class="etp-sdc-swatch-row">
+                                                        <input type="color" data-etp-theme-color-picker="<?php echo \esc_attr($param); ?>" value="#<?php echo \esc_attr($field[1]); ?>" aria-label="<?php echo \esc_attr($field[0]); ?> color picker">
+                                                        <input id="etp-sdc-theme-<?php echo \esc_attr($param); ?>" type="text" data-etp-theme-param="<?php echo \esc_attr($param); ?>" data-preview-default="<?php echo \esc_attr($field[1]); ?>" placeholder="<?php echo \esc_attr($field[1]); ?>">
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                                <div class="etp-sdc-theme-group">
+                                    <h3>Typography</h3>
+                                    <div class="etp-sdc-font-grid">
+                                        <div class="etp-sdc-field">
+                                            <label for="etp-sdc-font-family">Body font</label>
+                                            <input id="etp-sdc-font-family" type="text" data-etp-theme-param="font_family" data-preview-default="Inter, Arial, sans-serif" placeholder="Inter, Arial, sans-serif">
+                                        </div>
+                                        <div class="etp-sdc-field">
+                                            <label for="etp-sdc-heading-font">Heading font</label>
+                                            <input id="etp-sdc-heading-font" type="text" data-etp-theme-param="heading_font" data-preview-default="Georgia, serif" placeholder="Georgia, serif">
+                                        </div>
+                                    </div>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="etp-sdc-two">
-                            <div class="etp-sdc-field">
-                                <label for="etp-sdc-font-family">Font family</label>
-                                <input id="etp-sdc-font-family" type="text" data-etp-theme-param="font_family" placeholder="Inter, Arial, sans-serif">
                             </div>
-                            <div class="etp-sdc-field">
-                                <label for="etp-sdc-heading-font">Heading font</label>
-                                <input id="etp-sdc-heading-font" type="text" data-etp-theme-param="heading_font" placeholder="Georgia, serif">
+                            <div class="etp-sdc-preview-shell">
+                                <div class="etp-sdc-preview-toolbar">
+                                    <strong>Live preview</strong>
+                                    <span>Updates as you edit</span>
+                                </div>
+                                <div class="etp-sdc-live-preview" data-etp-theme-preview>
+                                    <div class="etp-sdc-live-hero">
+                                        <span class="etp-sdc-live-eyebrow">Participating Organization Directory</span>
+                                        <h3>Find the right organization faster.</h3>
+                                        <p>Live Qlik data with a friendlier search, filter, and contact experience layered on top.</p>
+                                    </div>
+                                    <div class="etp-sdc-live-search">
+                                        <div class="etp-sdc-live-input">Search by organization, county, service, or keyword</div>
+                                        <div class="etp-sdc-live-button">Search Directory</div>
+                                    </div>
+                                    <div class="etp-sdc-live-body">
+                                        <div class="etp-sdc-live-filter">
+                                            <strong>Filters</strong>
+                                            <span class="etp-sdc-live-pill">Emergency help</span>
+                                            <span class="etp-sdc-live-pill">Legal support</span>
+                                            <span class="etp-sdc-live-pill">Shelter</span>
+                                        </div>
+                                        <div class="etp-sdc-live-main">
+                                            <h4>5 matching organizations</h4>
+                                            <p>Showing results for Chester, Awareness, Children, and more.</p>
+                                            <div class="etp-sdc-live-cards">
+                                                <div class="etp-sdc-live-card">
+                                                    <h5>American Job Center Northwest Tennessee</h5>
+                                                    <p><strong>Serves:</strong> Chester<br><strong>Type:</strong> Business</p>
+                                                    <span class="etp-sdc-live-tag">Prevention</span>
+                                                    <div class="etp-sdc-live-actions"><span>Call</span><span>Email</span></div>
+                                                </div>
+                                                <div class="etp-sdc-live-card">
+                                                    <h5>Greystone Foster Care</h5>
+                                                    <p>Therapeutic services and support for youth and families.</p>
+                                                    <span class="etp-sdc-live-tag etp-sdc-live-danger">Vulnerability</span>
+                                                    <div class="etp-sdc-live-actions"><span>Call</span><span>Email</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
