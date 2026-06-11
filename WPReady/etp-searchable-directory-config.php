@@ -727,6 +727,9 @@ function admin_styles() {
         .etp-sdc-wrap .etp-sdc-live-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:12px; }
         .etp-sdc-wrap .etp-sdc-live-actions span { display:block; text-align:center; border-radius:4px; padding:8px; font-weight:700; background:var(--preview-primary); color:#fff; }
         .etp-sdc-wrap .etp-sdc-live-actions span + span { background:var(--preview-secondary-soft); color:var(--preview-text); }
+        .etp-sdc-wrap .etp-sdc-live-preview [data-etp-preview-part] { transition:opacity .16s ease, outline-color .16s ease, box-shadow .16s ease, filter .16s ease; }
+        .etp-sdc-wrap .etp-sdc-live-preview.etp-sdc-has-preview-highlight [data-etp-preview-part] { opacity:.38; }
+        .etp-sdc-wrap .etp-sdc-live-preview.etp-sdc-has-preview-highlight .etp-sdc-preview-hit { opacity:1; outline:3px solid #2271b1; outline-offset:2px; box-shadow:0 0 0 6px rgba(34, 113, 177, .18); filter:saturate(1.12); position:relative; z-index:2; }
         .etp-sdc-wrap .etp-sdc-generated { min-height:120px; font-family:monospace; }
         .etp-sdc-wrap .etp-sdc-copy-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
         .etp-sdc-wrap .etp-sdc-muted { color:#646970; }
@@ -864,6 +867,25 @@ function admin_scripts() {
             font_family: "--preview-font",
             heading_font: "--preview-heading"
         };
+        const themeImpactMap = {
+            primary: ["hero", "primary-button", "primary-action"],
+            primary_dark: ["hero", "filter-pill"],
+            primary_soft: ["filter-pill"],
+            secondary: ["secondary-card"],
+            secondary_soft: ["secondary-action"],
+            text: ["body-text", "heading-text", "secondary-action"],
+            muted: ["muted-text", "search-input", "card-copy"],
+            line: ["preview-frame", "search-box", "filter-panel", "card"],
+            paper: ["preview-frame"],
+            surface: ["search-box", "filter-panel", "card"],
+            accent: ["accent-card"],
+            accent_soft: ["alert-tag"],
+            success: ["success-tag"],
+            success_soft: ["success-tag"],
+            danger: ["alert-tag"],
+            font_family: ["preview-frame", "body-text", "card-copy", "primary-button", "secondary-action"],
+            heading_font: ["heading-text"]
+        };
 
         function getMode() {
             const checked = Array.prototype.find.call(modeInputs, (input) => input.checked);
@@ -906,6 +928,26 @@ function admin_scripts() {
                 if (hex) preview.style.setProperty(property, `#${hex}`);
                 syncColorPicker(input);
             });
+        }
+
+        function setPreviewHighlight(param) {
+            if (!preview) return;
+            preview.querySelectorAll(".etp-sdc-preview-hit").forEach((node) => node.classList.remove("etp-sdc-preview-hit"));
+            const impacts = themeImpactMap[param] || [];
+            preview.classList.toggle("etp-sdc-has-preview-highlight", impacts.length > 0);
+            if (!impacts.length) return;
+            preview.querySelectorAll("[data-etp-preview-part]").forEach((node) => {
+                const parts = (node.dataset.etpPreviewPart || "").split(/\s+/);
+                if (impacts.some((impact) => parts.includes(impact))) {
+                    node.classList.add("etp-sdc-preview-hit");
+                }
+            });
+        }
+
+        function clearPreviewHighlight() {
+            if (!preview) return;
+            preview.classList.remove("etp-sdc-has-preview-highlight");
+            preview.querySelectorAll(".etp-sdc-preview-hit").forEach((node) => node.classList.remove("etp-sdc-preview-hit"));
         }
 
         function buildIframeLink() {
@@ -958,6 +1000,13 @@ function admin_scripts() {
                 if (input) input.value = picker.value.replace(/^#/, "");
                 buildIframeLink();
             });
+        });
+        iframeWizard.querySelectorAll("[data-etp-theme-control]").forEach((control) => {
+            const param = control.dataset.etpThemeControl;
+            control.addEventListener("mouseenter", () => setPreviewHighlight(param));
+            control.addEventListener("mouseleave", clearPreviewHighlight);
+            control.addEventListener("focusin", () => setPreviewHighlight(param));
+            control.addEventListener("focusout", clearPreviewHighlight);
         });
         themeInputs.forEach(syncColorPicker);
         iframeWizard.addEventListener("input", buildIframeLink);
@@ -1478,7 +1527,7 @@ function render_iframe_links_page() {
                                         <h3><?php echo \esc_html($group_label); ?></h3>
                                         <div class="etp-sdc-color-grid">
                                             <?php foreach ($color_fields as $param => $field) : ?>
-                                                <div class="etp-sdc-color-control">
+                                                <div class="etp-sdc-color-control" data-etp-theme-control="<?php echo \esc_attr($param); ?>">
                                                     <label for="etp-sdc-theme-<?php echo \esc_attr($param); ?>"><?php echo \esc_html($field[0]); ?></label>
                                                     <div class="etp-sdc-swatch-row">
                                                         <input type="color" data-etp-theme-color-picker="<?php echo \esc_attr($param); ?>" value="#<?php echo \esc_attr($field[1]); ?>" aria-label="<?php echo \esc_attr($field[0]); ?> color picker">
@@ -1492,7 +1541,7 @@ function render_iframe_links_page() {
                                 <div class="etp-sdc-theme-group">
                                     <h3>Typography</h3>
                                     <div class="etp-sdc-font-grid">
-                                        <div class="etp-sdc-field">
+                                        <div class="etp-sdc-field" data-etp-theme-control="font_family">
                                             <label for="etp-sdc-font-family">Body font</label>
                                             <select id="etp-sdc-font-family" data-etp-theme-param="font_family" data-preview-default="Inter, Arial, sans-serif">
                                                 <option value="Inter, Arial, sans-serif">Inter / Arial</option>
@@ -1505,7 +1554,7 @@ function render_iframe_links_page() {
                                                 <option value="'Times New Roman', Times, serif">Times New Roman</option>
                                             </select>
                                         </div>
-                                        <div class="etp-sdc-field">
+                                        <div class="etp-sdc-field" data-etp-theme-control="heading_font">
                                             <label for="etp-sdc-heading-font">Heading font</label>
                                             <select id="etp-sdc-heading-font" data-etp-theme-param="heading_font" data-preview-default="Georgia, serif">
                                                 <option value="Georgia, serif">Georgia</option>
@@ -1525,38 +1574,38 @@ function render_iframe_links_page() {
                                     <strong>Live preview</strong>
                                     <span>Updates as you edit</span>
                                 </div>
-                                <div class="etp-sdc-live-preview" data-etp-theme-preview>
-                                    <div class="etp-sdc-live-hero">
-                                        <span class="etp-sdc-live-eyebrow">Participating Organization Directory</span>
-                                        <h3>Find the right organization faster.</h3>
-                                        <p>Live Qlik data with a friendlier search, filter, and contact experience layered on top.</p>
+                                <div class="etp-sdc-live-preview" data-etp-theme-preview data-etp-preview-part="preview-frame body-text">
+                                    <div class="etp-sdc-live-hero" data-etp-preview-part="hero">
+                                        <span class="etp-sdc-live-eyebrow" data-etp-preview-part="body-text">Participating Organization Directory</span>
+                                        <h3 data-etp-preview-part="heading-text">Find the right organization faster.</h3>
+                                        <p data-etp-preview-part="body-text">Live Qlik data with a friendlier search, filter, and contact experience layered on top.</p>
                                     </div>
-                                    <div class="etp-sdc-live-search">
-                                        <div class="etp-sdc-live-input">Search by organization, county, service, or keyword</div>
-                                        <div class="etp-sdc-live-button">Search Directory</div>
+                                    <div class="etp-sdc-live-search" data-etp-preview-part="search-box">
+                                        <div class="etp-sdc-live-input" data-etp-preview-part="search-input muted-text">Search by organization, county, service, or keyword</div>
+                                        <div class="etp-sdc-live-button" data-etp-preview-part="primary-button body-text">Search Directory</div>
                                     </div>
                                     <div class="etp-sdc-live-body">
-                                        <div class="etp-sdc-live-filter">
-                                            <strong>Filters</strong>
-                                            <span class="etp-sdc-live-pill">Emergency help</span>
-                                            <span class="etp-sdc-live-pill">Legal support</span>
-                                            <span class="etp-sdc-live-pill">Shelter</span>
+                                        <div class="etp-sdc-live-filter" data-etp-preview-part="filter-panel">
+                                            <strong data-etp-preview-part="body-text">Filters</strong>
+                                            <span class="etp-sdc-live-pill" data-etp-preview-part="filter-pill body-text">Emergency help</span>
+                                            <span class="etp-sdc-live-pill" data-etp-preview-part="filter-pill body-text">Legal support</span>
+                                            <span class="etp-sdc-live-pill" data-etp-preview-part="filter-pill body-text">Shelter</span>
                                         </div>
                                         <div class="etp-sdc-live-main">
-                                            <h4>5 matching organizations</h4>
-                                            <p>Showing results for Chester, Awareness, Children, and more.</p>
+                                            <h4 data-etp-preview-part="heading-text">5 matching organizations</h4>
+                                            <p data-etp-preview-part="muted-text body-text">Showing results for Chester, Awareness, Children, and more.</p>
                                             <div class="etp-sdc-live-cards">
-                                                <div class="etp-sdc-live-card">
-                                                    <h5>American Job Center Northwest Tennessee</h5>
-                                                    <p><strong>Serves:</strong> Chester<br><strong>Type:</strong> Business</p>
-                                                    <span class="etp-sdc-live-tag">Prevention</span>
-                                                    <div class="etp-sdc-live-actions"><span>Call</span><span>Email</span></div>
+                                                <div class="etp-sdc-live-card" data-etp-preview-part="card secondary-card">
+                                                    <h5 data-etp-preview-part="heading-text">American Job Center Northwest Tennessee</h5>
+                                                    <p data-etp-preview-part="card-copy body-text"><strong>Serves:</strong> Chester<br><strong>Type:</strong> Business</p>
+                                                    <span class="etp-sdc-live-tag" data-etp-preview-part="success-tag body-text">Prevention</span>
+                                                    <div class="etp-sdc-live-actions"><span data-etp-preview-part="primary-action body-text">Call</span><span data-etp-preview-part="secondary-action body-text">Email</span></div>
                                                 </div>
-                                                <div class="etp-sdc-live-card">
-                                                    <h5>Greystone Foster Care</h5>
-                                                    <p>Therapeutic services and support for youth and families.</p>
-                                                    <span class="etp-sdc-live-tag etp-sdc-live-danger">Vulnerability</span>
-                                                    <div class="etp-sdc-live-actions"><span>Call</span><span>Email</span></div>
+                                                <div class="etp-sdc-live-card" data-etp-preview-part="card accent-card">
+                                                    <h5 data-etp-preview-part="heading-text">Greystone Foster Care</h5>
+                                                    <p data-etp-preview-part="card-copy body-text">Therapeutic services and support for youth and families.</p>
+                                                    <span class="etp-sdc-live-tag etp-sdc-live-danger" data-etp-preview-part="alert-tag body-text">Vulnerability</span>
+                                                    <div class="etp-sdc-live-actions"><span data-etp-preview-part="primary-action body-text">Call</span><span data-etp-preview-part="secondary-action body-text">Email</span></div>
                                                 </div>
                                             </div>
                                         </div>
